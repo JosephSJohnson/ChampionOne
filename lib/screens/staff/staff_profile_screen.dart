@@ -124,6 +124,101 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
 
           ),
 
+          IconButton(
+
+  icon: const Icon(
+    Icons.delete,
+    color: Colors.red,
+  ),
+
+  tooltip: "Delete Staff",
+
+ onPressed: () async {
+
+  final confirm = await showDialog<bool>(
+
+    context: context,
+
+    builder: (context) {
+
+      return AlertDialog(
+
+        title: const Text(
+          "Delete Staff",
+        ),
+
+        content: Text(
+
+          "Are you sure you want to delete\n\n"
+          "${staff.fullName}\n"
+          "${staff.staffID}?",
+
+        ),
+
+        actions: [
+
+          TextButton(
+
+            onPressed: () {
+
+              Navigator.pop(
+                context,
+                false,
+              );
+
+            },
+
+            child: const Text(
+              "Cancel",
+            ),
+
+          ),
+
+          ElevatedButton(
+
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+
+            onPressed: () {
+
+              Navigator.pop(
+                context,
+                true,
+              );
+
+            },
+
+            child: const Text(
+              "Delete",
+            ),
+
+          ),
+
+        ],
+
+      );
+
+    },
+
+  );
+
+  if (confirm == true) {
+
+  StaffData.deleteStaff(
+    staff.staffID,
+  );
+
+  Navigator.pop(
+    context,
+    true,
+  );
+
+}
+
+},
+
+),
 
         ],
 

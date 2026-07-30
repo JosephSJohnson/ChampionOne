@@ -9,6 +9,16 @@ class StaffData {
     staffList.add(staff);
   }
 
+  static void deleteStaff(String staffID) {
+
+  staffList.removeWhere(
+
+    (staff) => staff.staffID == staffID,
+
+  );
+
+}
+
   static void updateStaff(StaffModel updatedStaff) {
     final index = staffList.indexWhere(
       (staff) => staff.staffID == updatedStaff.staffID,
@@ -19,11 +29,6 @@ class StaffData {
     }
   }
 
-  static void deleteStaff(String staffID) {
-    staffList.removeWhere(
-      (staff) => staff.staffID == staffID,
-    );
-  }
 
   static StaffModel? getStaffByID(String staffID) {
     try {
