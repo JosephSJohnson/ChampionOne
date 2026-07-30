@@ -45,7 +45,7 @@ class _CreateStaffScreenState
   // Staff Information
   //========================
 
-  String staffID = IDGenerator.generateStaffID();
+ String staffID = "";
 
   String gender = "Male";
   String selectedRole = "Teacher";
@@ -205,6 +205,8 @@ class _CreateStaffScreenState
       return;
     }
 
+    staffID = IDGenerator.generateStaffID();
+
     final StaffModel staff = StaffModel(
       staffID: staffID,
 
@@ -263,32 +265,31 @@ class _CreateStaffScreenState
     );
 
     setState(() {
-      staffID = IDGenerator.generateStaffID();
+  fullNameController.clear();
+  nationalityController.clear();
+  addressController.clear();
 
-      fullNameController.clear();
-      nationalityController.clear();
-      addressController.clear();
+  phoneController.clear();
+  emailController.clear();
 
-      phoneController.clear();
-      emailController.clear();
+  usernameController.clear();
+  passwordController.clear();
+  confirmPasswordController.clear();
 
-      usernameController.clear();
-      passwordController.clear();
-      confirmPasswordController.clear();
+  otherQualificationController.clear();
 
-      otherQualificationController.clear();
+  selectedImage = null;
+  qualificationFile = null;
 
-      selectedImage = null;
-      qualificationFile = null;
+  gender = "Male";
+  selectedRole = "Teacher";
+  highestQualification = "High School Diploma";
+  accountStatus = "Pending";
+  dateOfBirth = null;
 
-      gender = "Male";
-      selectedRole = "Teacher";
-      highestQualification =
-          "High School Diploma";
-      accountStatus = "Pending";
-      dateOfBirth = null;
-    });
-  }
+  staffID = "";
+});
+}
 
     @override
   Widget build(BuildContext context) {
