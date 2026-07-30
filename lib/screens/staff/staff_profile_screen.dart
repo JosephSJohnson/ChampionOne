@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
+import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
 
@@ -239,34 +240,125 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
 
             Card(
 
-              child: ListTile(
+  child: Padding(
 
-                leading: const Icon(
-                  Icons.description,
-                ),
+    padding: const EdgeInsets.all(15),
+
+    child: Column(
+
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+
+      children: [
 
 
-                title: const Text(
-                  "Qualification Certificate",
-                ),
+        const Row(
 
+          children: [
 
-                subtitle: Text(
+            Icon(
+              Icons.description,
+            ),
 
-                  staff.qualificationDocument.isEmpty
+            SizedBox(
+              width: 10,
+            ),
 
-                  ? "No document uploaded"
+            Text(
 
-                  : staff.qualificationDocument
-                      .split('/')
-                      .last,
+              "Qualification Certificate",
 
-                ),
+              style: TextStyle(
+
+                fontSize: 16,
+
+                fontWeight:
+                    FontWeight.bold,
 
               ),
 
             ),
 
+          ],
+
+        ),
+
+
+
+        const SizedBox(
+          height: 10,
+        ),
+
+
+
+        Text(
+
+          staff.qualificationDocument.isEmpty
+
+              ? "No document uploaded"
+
+              : staff.qualificationDocument
+                  .split('/')
+                  .last,
+
+        ),
+
+
+
+        const SizedBox(
+          height: 15,
+        ),
+
+
+
+        if (staff.qualificationDocument.isNotEmpty)
+
+          SizedBox(
+
+            width: double.infinity,
+
+            child: ElevatedButton.icon(
+
+            onPressed: () {
+
+  if (staff.qualificationDocument.isNotEmpty) {
+
+    html.window.open(
+
+      staff.qualificationDocument,
+
+      "_blank",
+
+    );
+
+  }
+
+},
+
+
+              icon: const Icon(
+                Icons.open_in_new,
+              ),
+
+
+              label: const Text(
+
+                "VIEW CERTIFICATE",
+
+              ),
+
+            ),
+
+          ),
+
+
+      ],
+
+    ),
+
+  ),
+
+),
 
 
             _buildInfo(
