@@ -1,17 +1,9 @@
+import '../data/staff_data.dart';
+
 class IDGenerator {
-
-  static int _staffCounter = 1;
-
   static String generateStaffID() {
+    final nextNumber = StaffData.staffList.length + 1;
 
-    String number = _staffCounter
-        .toString()
-        .padLeft(3, '0');
-
-    _staffCounter++;
-
-    return "CHAMP-$number";
-
+    return "CHAMP-${nextNumber.toString().padLeft(3, '0')}";
   }
-
 }
