@@ -26,6 +26,24 @@ class _StaffDirectoryScreenState
 
   String searchText = "";
 
+  String selectedRole = "All Roles";
+
+
+final List<String> roles = [
+
+  "All Roles",
+  "Principal",
+  "Vice Principal Academic Affairs",
+  "Vice Principal Student Affairs",
+  "Finance Officer",
+  "Secretary",
+  "Teacher",
+  "Class Teacher",
+  "Librarian",
+  "Other Staff",
+
+];
+
 
 
   @override
@@ -43,15 +61,17 @@ class _StaffDirectoryScreenState
   Widget build(BuildContext context) {
 
 
-    final filteredStaff =
-        StaffData.staffList.where((staff) {
+   final filteredStaff =
+    StaffData.staffList.where((staff) {
 
 
-      final search =
-          searchText.toLowerCase();
+  final search =
+      searchText.toLowerCase();
 
 
-      return staff.fullName
+  final matchesSearch =
+
+      staff.fullName
               .toLowerCase()
               .contains(search) ||
 
@@ -64,9 +84,21 @@ class _StaffDirectoryScreenState
               .contains(search);
 
 
-    }).toList();
+
+  final matchesRole =
+
+      selectedRole == "All Roles"
+
+          ? true
+
+          : staff.role == selectedRole;
 
 
+
+  return matchesSearch && matchesRole;
+
+
+}).toList();
 
     return Scaffold(
 
@@ -134,6 +166,52 @@ class _StaffDirectoryScreenState
             ),
 
           ),
+
+          Padding(
+
+  padding: const EdgeInsets.symmetric(
+    horizontal: 15,
+  ),
+
+  child: DropdownButtonFormField<String>(
+
+    value: selectedRole,
+
+    decoration: const InputDecoration(
+
+      labelText: "Filter By Role",
+
+      border: OutlineInputBorder(),
+
+    ),
+
+
+    items: roles.map((role) {
+
+      return DropdownMenuItem(
+
+        value: role,
+
+        child: Text(role),
+
+      );
+
+    }).toList(),
+
+
+    onChanged: (value) {
+
+      setState(() {
+
+        selectedRole = value!;
+
+      });
+
+    },
+
+  ),
+
+),
 
 
 
