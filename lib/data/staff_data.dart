@@ -1,4 +1,5 @@
 import '../models/staff_model.dart';
+import '../database/database_helper.dart';
 
 class StaffData {
   StaffData._();
@@ -39,4 +40,24 @@ class StaffData {
       return null;
     }
   }
+
+static Future<void> loadStaff() async {
+
+  final records =
+      await DatabaseHelper.instance.getStaff();
+
+
+  staffList.clear();
+
+
+  for (var record in records) {
+
+    staffList.add(
+      StaffModel.fromMap(record),
+    );
+
+  }
+
+}
+  
 }

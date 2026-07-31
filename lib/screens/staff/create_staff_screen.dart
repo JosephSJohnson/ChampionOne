@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../models/staff_model.dart';
 import '../../data/staff_data.dart';
 import '../../utils/id_generator.dart';
+import '../../database/database_helper.dart';
 
 class CreateStaffScreen extends StatefulWidget {
   const CreateStaffScreen({super.key});
@@ -176,7 +177,7 @@ class _CreateStaffScreenState
     super.dispose();
   }
 
-    void createAccount() {
+    Future<void> createAccount() async {
     if (fullNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -254,7 +255,11 @@ class _CreateStaffScreenState
           DateTime.now(),
     );
 
-    StaffData.addStaff(staff);
+    await DatabaseHelper.instance.insertStaff(
+  staff.toMap(),
+);
+
+StaffData.addStaff(staff);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

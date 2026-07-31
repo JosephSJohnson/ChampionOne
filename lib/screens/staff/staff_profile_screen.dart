@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
-import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
-
+import 'package:open_filex/open_filex.dart';
 import '../../models/staff_model.dart';
 import '../../data/staff_data.dart';
 import 'edit_staff_screen.dart';
@@ -414,22 +413,47 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
 
             child: ElevatedButton.icon(
 
-            onPressed: () {
+           onPressed: () async {
 
-  if (staff.qualificationDocument.isNotEmpty) {
+  if (staff.qualificationDocument.isEmpty) {
 
-    html.window.open(
+    ScaffoldMessenger.of(context).showSnackBar(
 
-      staff.qualificationDocument,
+      const SnackBar(
 
-      "_blank",
+        content: Text(
+          "No qualification document uploaded.",
+        ),
+
+      ),
+
+    );
+
+    return;
+
+  }
+
+  final result = await OpenFilex.open(
+    staff.qualificationDocument,
+  );
+
+  if (result.type != ResultType.done) {
+
+    ScaffoldMessenger.of(context).showSnackBar(
+
+      SnackBar(
+
+        content: Text(
+          "Unable to open document: ${result.message}",
+        ),
+
+      ),
 
     );
 
   }
 
 },
-
 
               icon: const Icon(
                 Icons.open_in_new,
