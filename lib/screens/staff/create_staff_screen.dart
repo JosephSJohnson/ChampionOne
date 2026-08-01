@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
@@ -330,8 +331,12 @@ StaffData.addStaff(staff);
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: selectedImage != null
-                        ? NetworkImage(selectedImage!.path)
-                        : null,
+    ? FileImage(
+        File(
+          selectedImage!.path,
+        ),
+      )
+    : null,
                     child: selectedImage == null
                         ? const Icon(
                             Icons.person,

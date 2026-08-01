@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/staff_model.dart';
 import '../../data/staff_data.dart';
+import '../../database/database_helper.dart';
 
 class EditStaffScreen extends StatefulWidget {
   final StaffModel staff;
@@ -48,7 +49,7 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
     super.dispose();
   }
 
-  void saveChanges() {
+  Future<void> saveChanges() async {
     StaffModel updatedStaff = StaffModel(
       staffID: widget.staff.staffID,
       profileImage: widget.staff.profileImage,
@@ -77,6 +78,10 @@ class _EditStaffScreenState extends State<EditStaffScreen> {
 
       createdDate: widget.staff.createdDate,
     );
+
+await DatabaseHelper.instance.updateStaff(
+  updatedStaff.toMap(),
+);
 
     StaffData.updateStaff(updatedStaff);
 

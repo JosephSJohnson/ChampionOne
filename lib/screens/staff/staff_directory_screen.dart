@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../data/staff_data.dart';
@@ -340,14 +341,14 @@ final List<String> roles = [
                                       radius: 30,
 
 
-                                      backgroundImage:
-                                          staff.profileImage.isNotEmpty
-
-                                              ? NetworkImage(
-                                                  staff.profileImage,
-                                                )
-
-                                              : null,
+                                     backgroundImage:
+    staff.profileImage.isNotEmpty
+        ? FileImage(
+            File(
+              staff.profileImage,
+            ),
+          )
+        : null,
 
 
                                       child:

@@ -36,8 +36,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
 
   }
@@ -52,7 +53,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE staff(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        staffID TEXT,
+        staffID TEXT UNIQUE,
         fullName TEXT,
         gender TEXT,
         dateOfBirth TEXT,
@@ -74,7 +75,23 @@ class DatabaseHelper {
 
   }
 
+Future<void> _onUpgrade(
+  Database db,
+  int oldVersion,
+  int newVersion,
+) async {
 
+if (oldVersion < 2) {
+
+  await db.execute(
+    '''
+    CREATE UNIQUE INDEX staff_id_unique
+    ON staff(staffID)
+    '''
+  );
+
+}
+}
 
   Future<int> insertStaff(
     Map<String, dynamic> staff,
@@ -125,5 +142,21 @@ class DatabaseHelper {
 
   }
 
+Future<int> updateStaff(
+  Map<String, dynamic> staff,
+) async {
+
+  final db = await database;
+
+  return await db.update(
+    'staff',
+    staff,
+    where: 'staffID = ?',
+    whereArgs: [
+      staff['staffID'],
+    ],
+  );
+
+}
 
 }

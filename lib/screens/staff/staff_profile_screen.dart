@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../models/staff_model.dart';
 import '../../data/staff_data.dart';
+import '../../database/database_helper.dart';
 import 'edit_staff_screen.dart';
 
 
@@ -204,6 +206,10 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
 
   if (confirm == true) {
 
+    await DatabaseHelper.instance.deleteStaff(
+    staff.staffID,
+  );
+
   StaffData.deleteStaff(
     staff.staffID,
   );
@@ -242,8 +248,12 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
   radius: 60,
 
   backgroundImage: staff.profileImage.isNotEmpty
-    ? NetworkImage(staff.profileImage)
-    : null,
+      ? FileImage(
+          File(
+            staff.profileImage,
+          ),
+        )
+      : null,
 
   child: staff.profileImage.isEmpty
       ? Text(
