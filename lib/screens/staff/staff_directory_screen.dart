@@ -45,6 +45,17 @@ final List<String> roles = [
 
 ];
 
+@override
+void didChangeDependencies() {
+  super.didChangeDependencies();
+
+  StaffData.loadStaff().then((_) {
+
+    setState(() {});
+
+  });
+
+}
 
 
   @override
@@ -480,19 +491,29 @@ final List<String> roles = [
                                   decoration:
                                       BoxDecoration(
 
-                                    color:
+                                   color:
 
-                                        staff.accountStatus ==
-                                                "Active"
+    staff.accountStatus == "Active"
 
-                                            ? Colors.green
+        ? Colors.green
 
-                                            : staff.accountStatus ==
-                                                    "Pending"
+        : staff.accountStatus == "Pending"
 
-                                                ? Colors.orange
+            ? Colors.orange
 
-                                                : Colors.red,
+            : staff.accountStatus == "Suspended"
+
+                ? Colors.red
+
+                : staff.accountStatus == "Terminated"
+
+                    ? Colors.black
+
+                    : staff.accountStatus == "Resigned"
+
+                        ? Colors.blue
+
+                        : Colors.grey,
 
 
                                     borderRadius:

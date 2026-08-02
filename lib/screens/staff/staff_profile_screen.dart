@@ -31,7 +31,7 @@ class StaffProfileScreen extends StatefulWidget {
 
 class _StaffProfileScreenState extends State<StaffProfileScreen> {
 
-
+String selectedStatus = "";
   late StaffModel staff;
 
 
@@ -40,6 +40,8 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
   void initState() {
 
     super.initState();
+
+selectedStatus = widget.staff.accountStatus;
 
     staff = widget.staff;
 
@@ -508,12 +510,252 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
             ),
 
 
-            _buildInfo(
-              "Account Status",
-              staff.accountStatus,
+            Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+
+    const Text(
+      "Account Status",
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+    const SizedBox(height: 6),
+
+    Chip(
+      label: Text(
+        selectedStatus
+      ),
+      backgroundColor:
+
+           selectedStatus == "Active"
+              ? Colors.green
+
+          : selectedStatus == "Pending"
+              ? Colors.orange
+
+          : selectedStatus == "Suspended"
+              ? Colors.red
+
+          : selectedStatus == "Terminated"
+              ? Colors.black
+
+          : Colors.blue,
+
+      labelStyle: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+  ],
+),
+
+const SizedBox(
+  height: 20,
+),
+
+SizedBox(
+  width: double.infinity,
+  child: ElevatedButton.icon(
+    onPressed: () {
+
+  showDialog(
+    context: context,
+    builder: (context) {
+
+      return AlertDialog(
+
+        title: const Text(
+          "Change Account Status",
+        ),
+
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+
+            ListTile(
+  title: const Text("🟢 Active"),
+  onTap: () {
+
+    setState(() {
+
+      selectedStatus = "Active";
+
+    });
+
+  },
+),
+
+           ListTile(
+  title: const Text("🟡 Pending"),
+  onTap: () {
+
+    setState(() {
+
+      selectedStatus = "Pending";
+
+    });
+
+  },
+),
+
+           ListTile(
+  title: const Text("🔴 Suspended"),
+  onTap: () {
+
+    setState(() {
+
+  selectedStatus = "Suspended";
+
+});
+
+  },
+),
+
+            ListTile(
+  title: const Text("⚫ Terminated"),
+  onTap: () {
+
+   setState(() {
+
+  selectedStatus = "Terminated";
+
+});
+
+  },
+),
+
+            ListTile(
+  title: const Text("🔵 Resigned"),
+  onTap: () {
+
+    setState(() {
+
+  selectedStatus = "Resigned";
+
+});
+
+  },
+),
+
+                    ],
+        ),
+
+        actions: [
+
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text(
+              "Cancel",
             ),
+          ),
+
+          ElevatedButton(
+            onPressed: () async {
+
+  StaffModel updatedStaff = StaffModel(
+
+    staffID: widget.staff.staffID,
+
+    profileImage: widget.staff.profileImage,
+
+    qualificationDocument:
+        widget.staff.qualificationDocument,
+
+    fullName: widget.staff.fullName,
+
+    dateOfBirth: widget.staff.dateOfBirth,
+
+    gender: widget.staff.gender,
+
+    nationality: widget.staff.nationality,
+
+    address: widget.staff.address,
+
+    qualification: widget.staff.qualification,
+
+    otherQualification:
+        widget.staff.otherQualification,
+
+    phone: widget.staff.phone,
+
+    email: widget.staff.email,
+
+    role: widget.staff.role,
+
+    username: widget.staff.username,
+
+    password: widget.staff.password,
+
+    accountStatus: selectedStatus,
+
+    createdDate: widget.staff.createdDate,
+
+  );
 
 
+  await DatabaseHelper.instance.updateStaff(
+    updatedStaff.toMap(),
+  );
+
+
+  setState(() {
+
+    staff = updatedStaff;
+
+  });
+
+
+  Navigator.pop(context);
+
+
+  ScaffoldMessenger.of(context).showSnackBar(
+
+    const SnackBar(
+
+      content: Text(
+        "Staff status updated successfully.",
+      ),
+
+    ),
+
+  );
+
+},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text(
+              "Save",
+            ),
+          ),
+
+        ],
+
+      );
+
+    },
+
+  );
+
+},
+    icon: const Icon(
+      Icons.manage_accounts,
+    ),
+    label: const Text(
+      "CHANGE ACCOUNT STATUS",
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.amber,
+      foregroundColor: Colors.black,
+    ),
+  ),
+),
 
           ],
 
