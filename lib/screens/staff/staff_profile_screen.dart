@@ -8,6 +8,7 @@ import '../../models/staff_model.dart';
 import '../../data/staff_data.dart';
 import '../../database/database_helper.dart';
 import 'edit_staff_screen.dart';
+import 'staff_documents_screen.dart';
 
 
 class StaffProfileScreen extends StatefulWidget {
@@ -754,6 +755,45 @@ SizedBox(
       backgroundColor: Colors.amber,
       foregroundColor: Colors.black,
     ),
+  ),
+),
+
+const SizedBox(
+ height: 20,
+),
+
+SizedBox(
+  width: double.infinity,
+
+  child: ElevatedButton.icon(
+
+    onPressed: () {
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              StaffDocumentsScreen(
+                staff: widget.staff,
+              ),
+        ),
+      );
+
+    },
+
+    icon: const Icon(
+      Icons.folder,
+    ),
+
+    label: const Text(
+      "STAFF DOCUMENTS",
+    ),
+
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.amber,
+      foregroundColor: Colors.black,
+    ),
+
   ),
 ),
 

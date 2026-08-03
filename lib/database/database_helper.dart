@@ -36,7 +36,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -73,6 +73,18 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('''
+CREATE TABLE staff_documents(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  staffID TEXT,
+  documentType TEXT,
+  documentName TEXT,
+  filePath TEXT,
+  uploadDate TEXT
+)
+''');
+
+
   }
 
 Future<void> _onUpgrade(
@@ -81,16 +93,20 @@ Future<void> _onUpgrade(
   int newVersion,
 ) async {
 
-if (oldVersion < 2) {
+  if (oldVersion < 3) {
 
-  await db.execute(
-    '''
-    CREATE UNIQUE INDEX staff_id_unique
-    ON staff(staffID)
-    '''
-  );
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS staff_documents(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      staffID TEXT,
+      documentType TEXT,
+      documentName TEXT,
+      filePath TEXT,
+      uploadDate TEXT
+    )
+    ''');
 
-}
+  }
 }
 
   Future<int> insertStaff(
@@ -159,4 +175,32 @@ Future<int> updateStaff(
 
 }
 
+Future<int> insertDocument(
+  Map<String, dynamic> document,
+) async {
+
+  final db = await database;
+
+  return await db.insert(
+    'staff_documents',
+    document,
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+
+}
+
+Future<List<Map<String, dynamic>>> getDocuments(
+  String staffID,
+) async {
+
+  final db = await database;
+
+  return await db.query(
+    'staff_documents',
+    where: 'staffID = ?',
+    whereArgs: [staffID],
+    orderBy: 'id DESC',
+  );
+
+}
 }
