@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '../../models/staff_model.dart';
+import '../../models/staff_document_model.dart';
+import '../../database/database_helper.dart';
 
 
 class StaffDocumentsScreen extends StatefulWidget {
@@ -29,8 +31,55 @@ class _StaffDocumentsScreenState
 
       String selectedDocumentType = "Degree Certificate";
 
-  @override
-  Widget build(BuildContext context) {
+  File? selectedFile;
+
+String selectedFileName = "";
+String uploadDate = "";
+
+StaffDocumentModel createDocumentModel() {
+
+  return StaffDocumentModel(
+
+    staffID: widget.staff.staffID,
+
+    documentType: selectedDocumentType,
+
+    documentName: selectedFileName,
+
+    filePath: selectedFile!.path,
+
+    uploadDate: uploadDate,
+
+  );
+
+}
+
+Future<void> pickDocument() async {
+
+  FilePickerResult? result =
+      await FilePicker.platform.pickFiles();
+
+  if (result != null) {
+
+    setState(() {
+
+  selectedFile =
+      File(result.files.single.path!);
+
+  selectedFileName =
+      result.files.single.name;
+
+      uploadDate =
+    DateTime.now().toIso8601String();
+
+});
+
+  }
+
+}
+
+@override
+Widget build(BuildContext context) {
 
     return Scaffold(
 
@@ -123,6 +172,29 @@ class _StaffDocumentsScreenState
 
 ),
 
+SizedBox(
+  width: double.infinity,
+  child: Padding(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 20,
+    ),
+    child: ElevatedButton.icon(
+      onPressed: () {
+        pickDocument();
+      },
+      icon: const Icon(
+        Icons.attach_file,
+      ),
+      label: const Text(
+        "CHOOSE DOCUMENT",
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
+    ),
+  ),
+),
     const SizedBox(
       height: 20,
     ),
@@ -141,16 +213,37 @@ class _StaffDocumentsScreenState
 
         child: ElevatedButton.icon(
 
-          onPressed: () {
+          onPressed: () async {
+
+  if (selectedFile == null) {
+
+    ScaffoldMessenger.of(context).showSnackBar(
+
+      const SnackBar(
+        content: Text(
+          "Please choose a document first.",
+        ),
+      ),
+
+    );
+
+    return;
+
+  }
+
+  StaffDocumentModel document =
+      createDocumentModel();
+
+  await DatabaseHelper.instance.insertDocument(
+    document.toMap(),
+  );
 
   ScaffoldMessenger.of(context).showSnackBar(
 
     const SnackBar(
-
       content: Text(
-        "Add Document feature coming next",
+        "Document saved successfully.",
       ),
-
     ),
 
   );
@@ -180,6 +273,20 @@ class _StaffDocumentsScreenState
       ),
 
     ),
+
+    if (selectedFile != null)
+  Padding(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 20,
+      vertical: 10,
+    ),
+    child: Text(
+      "Selected File: ${selectedFile!.path.split('\\').last}",
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  ),
 
 
     const SizedBox(
