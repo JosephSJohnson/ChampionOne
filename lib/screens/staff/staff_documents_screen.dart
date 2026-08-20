@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:open_filex/open_filex.dart';
 
 import '../../models/staff_model.dart';
 import '../../models/staff_document_model.dart';
@@ -35,6 +36,56 @@ class _StaffDocumentsScreenState
 
 String selectedFileName = "";
 String uploadDate = "";
+List<StaffDocumentModel> documents = [];
+
+Future<void> loadDocuments() async {
+
+  final data =
+      await DatabaseHelper.instance.getDocuments(
+    widget.staff.staffID,
+  );
+
+  setState(() {
+
+    documents = data
+        .map(
+          (item) =>
+              StaffDocumentModel.fromMap(item),
+        )
+        .toList();
+
+  });
+
+}
+
+Future<void> openDocument(
+  StaffDocumentModel document,
+) async {
+
+  final result =
+      await OpenFilex.open(
+    document.filePath,
+  );
+
+  if (result.type != ResultType.done) {
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+
+      SnackBar(
+        content: Text(
+          "Could not open document: ${result.message}",
+        ),
+      ),
+
+    );
+
+  }
+
+}
 
 StaffDocumentModel createDocumentModel() {
 
@@ -76,6 +127,108 @@ Future<void> pickDocument() async {
 
   }
 
+}
+
+Future<void> deleteDocument(
+  StaffDocumentModel document,
+) async {
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+
+      return AlertDialog(
+
+        title: const Text(
+          "Delete Document",
+        ),
+
+        content: Text(
+          "Are you sure you want to delete "
+          "\"${document.documentName}\"?",
+        ),
+
+        actions: [
+
+          TextButton(
+            onPressed: () {
+              Navigator.pop(
+                context,
+                false,
+              );
+            },
+            child: const Text(
+              "CANCEL",
+            ),
+          ),
+
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(
+                context,
+                true,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text(
+              "DELETE",
+            ),
+          ),
+
+        ],
+
+      );
+
+    },
+  );
+
+  if (confirmed != true) {
+  return;
+}
+
+final file = File(document.filePath);
+
+final fileExists = await file.exists();
+
+if (fileExists) {
+  await file.delete();
+}
+
+await DatabaseHelper.instance.deleteDocument(
+  document.id!,
+);
+  if (!mounted) {
+    return;
+  }
+
+  setState(() {
+
+    documents.removeWhere(
+      (item) => item.id == document.id,
+    );
+
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+
+    const SnackBar(
+      content: Text(
+        "Document deleted successfully.",
+      ),
+    ),
+
+  );
+
+}
+
+@override
+void initState() {
+  super.initState();
+
+  loadDocuments();
 }
 
 @override
@@ -273,6 +426,79 @@ SizedBox(
       ),
 
     ),
+
+    if (documents.isNotEmpty)
+  Expanded(
+    child: ListView.builder(
+      itemCount: documents.length,
+      itemBuilder: (context, index) {
+
+        final document = documents[index];
+
+        return Card(
+          margin: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 6,
+          ),
+
+          child: ListTile(
+
+            leading: const Icon(
+              Icons.description,
+              color: Colors.blue,
+            ),
+
+            title: Text(
+              document.documentName,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            subtitle: Text(
+              "${document.documentType}\n"
+              "${document.uploadDate}",
+            ),
+
+            trailing: Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+
+    IconButton(
+      icon: const Icon(
+        Icons.open_in_new,
+        color: Colors.green,
+      ),
+
+      tooltip: "Open Document",
+
+      onPressed: () {
+        openDocument(document);
+      },
+    ),
+
+    IconButton(
+      icon: const Icon(
+        Icons.delete,
+        color: Colors.red,
+      ),
+
+      tooltip: "Delete Document",
+
+      onPressed: () {
+        deleteDocument(document);
+      },
+    ),
+
+  ],
+),
+
+          ),
+        );
+
+      },
+    ),
+  ),
 
     if (selectedFile != null)
   Padding(

@@ -203,4 +203,17 @@ Future<List<Map<String, dynamic>>> getDocuments(
   );
 
 }
+Future<int> deleteDocument(
+  int id,
+) async {
+
+  final db = await database;
+
+  return await db.delete(
+    'staff_documents',
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
+}
 }
