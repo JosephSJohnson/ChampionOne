@@ -62,10 +62,36 @@ Future<void> openDocument(
   StaffDocumentModel document,
 ) async {
 
-  final result =
-      await OpenFilex.open(
-    document.filePath,
+  final file = File(
+  document.filePath,
+);
+
+final fileExists = await file.exists();
+
+if (!fileExists) {
+
+  if (!mounted) {
+    return;
+  }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+
+    const SnackBar(
+      content: Text(
+        "Document file not found. "
+        "The file may have been moved or deleted.",
+      ),
+    ),
+
   );
+
+  return;
+}
+
+final result =
+    await OpenFilex.open(
+  document.filePath,
+);
 
   if (result.type != ResultType.done) {
 
