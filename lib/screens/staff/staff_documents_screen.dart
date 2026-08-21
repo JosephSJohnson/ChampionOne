@@ -263,15 +263,26 @@ Widget build(BuildContext context) {
     return Scaffold(
 
       appBar: AppBar(
+  title: Text(
+    "${widget.staff.fullName} Documents",
+  ),
+  backgroundColor: Colors.amber,
+  foregroundColor: Colors.black,
 
-        title: Text(
-          "${widget.staff.fullName} Documents",
+  actions: [
+    Padding(
+      padding: const EdgeInsets.only(right: 16),
+      child: Center(
+        child: Text(
+          "${documents.length} Documents",
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
-
-        backgroundColor: Colors.amber,
-        foregroundColor: Colors.black,
-
       ),
+    ),
+  ],
+),
 
 
 
