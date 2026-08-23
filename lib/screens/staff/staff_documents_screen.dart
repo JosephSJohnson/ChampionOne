@@ -488,6 +488,9 @@ Expanded(
           ),
 
           child: ListTile(
+  onTap: () {
+    openDocument(document);
+  },
 
             leading: const Icon(
               Icons.description,
