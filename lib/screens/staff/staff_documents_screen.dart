@@ -475,17 +475,51 @@ SizedBox(
 
     ),
 Expanded(
-  child: ListView.builder(
-    itemCount: filteredDocuments.length,
-    itemBuilder: (context, index) {
+  child: filteredDocuments.isEmpty
+      ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.description_outlined,
+                size: 64,
+                color: Colors.grey,
+              ),
 
-    final document = filteredDocuments[index];
+              SizedBox(height: 12),
 
-        return Card(
-          margin: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 6,
+              Text(
+                "No Documents Found",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              SizedBox(height: 8),
+
+              Text(
+                "This staff member has no documents\n"
+                "uploaded yet.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ],
           ),
+        )
+      : ListView.builder(
+          itemCount: filteredDocuments.length,
+          itemBuilder: (context, index) {
+
+            final document = filteredDocuments[index];
+
+            return Card(
+              margin: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 6,
+              ),
 
           child: ListTile(
   onTap: () {
@@ -505,9 +539,10 @@ Expanded(
             ),
 
             subtitle: Text(
-              "${document.documentType}\n"
-              "${document.uploadDate}",
-            ),
+  "${document.documentType}\n"
+  "${document.uploadDate}\n"
+  "File available",
+),
 
             trailing: Row(
   mainAxisSize: MainAxisSize.min,
