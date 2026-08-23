@@ -31,6 +31,7 @@ class _StaffDocumentsScreenState
     extends State<StaffDocumentsScreen> {
 
       String selectedDocumentType = "Degree Certificate";
+      String documentFilter = "All Documents";
 
   File? selectedFile;
 
@@ -260,6 +261,16 @@ void initState() {
 @override
 Widget build(BuildContext context) {
 
+final filteredDocuments = documentFilter == "All Documents"
+    ? documents
+    : documents
+        .where(
+          (document) =>
+              document.documentType == documentFilter,
+        )
+        .toList();
+  
+
     return Scaffold(
 
       appBar: AppBar(
@@ -463,14 +474,12 @@ SizedBox(
       ),
 
     ),
+Expanded(
+  child: ListView.builder(
+    itemCount: filteredDocuments.length,
+    itemBuilder: (context, index) {
 
-    if (documents.isNotEmpty)
-  Expanded(
-    child: ListView.builder(
-      itemCount: documents.length,
-      itemBuilder: (context, index) {
-
-        final document = documents[index];
+    final document = filteredDocuments[index];
 
         return Card(
           margin: const EdgeInsets.symmetric(
@@ -537,6 +546,59 @@ SizedBox(
     ),
   ),
 
+Padding(
+  padding: const EdgeInsets.symmetric(
+    horizontal: 20,
+    vertical: 10,
+  ),
+  child: DropdownButtonFormField<String>(
+    initialValue: documentFilter,
+    decoration: const InputDecoration(
+      labelText: "Filter Documents",
+      border: OutlineInputBorder(),
+      prefixIcon: Icon(Icons.filter_list),
+    ),
+    items: const [
+      DropdownMenuItem(
+        value: "All Documents",
+        child: Text("All Documents"),
+      ),
+      DropdownMenuItem(
+        value: "Degree Certificate",
+        child: Text("Degree Certificate"),
+      ),
+      DropdownMenuItem(
+        value: "Teaching License",
+        child: Text("Teaching License"),
+      ),
+      DropdownMenuItem(
+        value: "Resume/CV",
+        child: Text("Resume/CV"),
+      ),
+      DropdownMenuItem(
+        value: "Training Certificate",
+        child: Text("Training Certificate"),
+      ),
+      DropdownMenuItem(
+        value: "ID Document",
+        child: Text("ID Document"),
+      ),
+      DropdownMenuItem(
+        value: "Other",
+        child: Text("Other"),
+      ),
+    ],
+    onChanged: (value) {
+      if (value == null) {
+        return;
+      }
+
+      setState(() {
+        documentFilter = value;
+      });
+    },
+  ),
+),
     if (selectedFile != null)
   Padding(
     padding: const EdgeInsets.symmetric(
