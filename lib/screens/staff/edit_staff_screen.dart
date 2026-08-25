@@ -83,17 +83,21 @@ await DatabaseHelper.instance.updateStaff(
   updatedStaff.toMap(),
 );
 
-    StaffData.updateStaff(updatedStaff);
+if (!mounted) {
+  return;
+}
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Staff information updated successfully",
-        ),
-      ),
-    );
+StaffData.updateStaff(updatedStaff);
 
-    Navigator.pop(context);
+ScaffoldMessenger.of(context).showSnackBar(
+  const SnackBar(
+    content: Text(
+      "Staff information updated successfully",
+    ),
+  ),
+);
+
+Navigator.pop(context);
   }
 
   @override

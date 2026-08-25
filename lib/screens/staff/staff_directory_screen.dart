@@ -1,7 +1,8 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../../data/staff_data.dart';
+import '../../utils/file_storage.dart';
 import 'staff_profile_screen.dart';
 
 
@@ -20,6 +21,15 @@ class StaffDirectoryScreen extends StatefulWidget {
 class _StaffDirectoryScreenState
     extends State<StaffDirectoryScreen> {
 
+  Future<Uint8List?> _loadStaffPhoto(
+    String imagePath,
+  ) async {
+    if (imagePath.isEmpty) {
+      return null;
+    }
+
+    return FileStorage.readFile(imagePath);
+  }
 
   final TextEditingController searchController =
       TextEditingController();
@@ -186,8 +196,7 @@ void didChangeDependencies() {
   ),
 
   child: DropdownButtonFormField<String>(
-
-    value: selectedRole,
+     initialValue: selectedRole,
 
     decoration: const InputDecoration(
 
@@ -347,46 +356,32 @@ void didChangeDependencies() {
 
 
 
-                                    CircleAvatar(
+                                 FutureBuilder<Uint8List?>(
+  future: _loadStaffPhoto(
+    staff.profileImage,
+  ),
+  builder: (context, snapshot) {
+    final imageBytes = snapshot.data;
 
-                                      radius: 30,
-
-
-                                     backgroundImage:
-    staff.profileImage.isNotEmpty
-        ? FileImage(
-            File(
-              staff.profileImage,
-            ),
-          )
-        : null,
-
-
-                                      child:
-                                          staff.profileImage.isEmpty
-
-                                              ? Text(
-
-                                                  staff.fullName[0]
-                                                      .toUpperCase(),
-
-
-                                                  style:
-                                                      const TextStyle(
-
-                                                    fontSize:
-                                                        22,
-
-                                                    fontWeight:
-                                                        FontWeight.bold,
-
-                                                  ),
-
-                                                )
-
-                                              : null,
-
-                                    ),
+    return CircleAvatar(
+      radius: 30,
+      backgroundImage: imageBytes != null
+          ? MemoryImage(imageBytes)
+          : null,
+      child: imageBytes == null
+          ? Text(
+              staff.fullName.isNotEmpty
+                  ? staff.fullName[0].toUpperCase()
+                  : "?",
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          : null,
+    );
+  },
+),
 
 
 

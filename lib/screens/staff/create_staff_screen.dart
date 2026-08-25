@@ -1,12 +1,15 @@
-import 'dart:io';
+import 'dart:typed_data';
+import 'dart:io' show File;
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 
-import '../../models/staff_model.dart';
 import '../../data/staff_data.dart';
-import '../../utils/id_generator.dart';
 import '../../database/database_helper.dart';
+import '../../models/staff_model.dart';
+import '../../utils/file_storage.dart';
+import '../../utils/id_generator.dart';
 
 class CreateStaffScreen extends StatefulWidget {
   const CreateStaffScreen({super.key});
@@ -18,9 +21,9 @@ class CreateStaffScreen extends StatefulWidget {
 
 class _CreateStaffScreenState
     extends State<CreateStaffScreen> {
-  //========================
-  // Controllers
-  //========================
+  // ============================================================
+  // CONTROLLERS
+  // ============================================================
 
   final fullNameController = TextEditingController();
   final nationalityController = TextEditingController();
@@ -31,26 +34,31 @@ class _CreateStaffScreenState
 
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
+  final confirmPasswordController =
+      TextEditingController();
 
   final otherQualificationController =
       TextEditingController();
 
-  //========================
-  // Images & Documents
-  //========================
+  // ============================================================
+  // PHOTO & DOCUMENT
+  // ============================================================
 
   XFile? selectedImage;
+  Uint8List? selectedImageBytes;
+
   PlatformFile? qualificationFile;
 
-  //========================
-  // Staff Information
-  //========================
+  // ============================================================
+  // STAFF INFORMATION
+  // ============================================================
 
- String staffID = "";
+  String staffID = "";
 
   String gender = "Male";
+
   String selectedRole = "Teacher";
+
   String highestQualification =
       "High School Diploma";
 
@@ -58,9 +66,9 @@ class _CreateStaffScreenState
 
   DateTime? dateOfBirth;
 
-  //========================
-  // Dropdown Lists
-  //========================
+  // ============================================================
+  // DROPDOWN LISTS
+  // ============================================================
 
   final List<String> genders = [
     "Male",
@@ -97,9 +105,9 @@ class _CreateStaffScreenState
     "Disabled",
   ];
 
-  //========================
-  // Pick Date of Birth
-  //========================
+  // ============================================================
+  // PICK DATE OF BIRTH
+  // ============================================================
 
   Future<void> pickDateOfBirth() async {
     final picked = await showDatePicker(
@@ -109,16 +117,22 @@ class _CreateStaffScreenState
       lastDate: DateTime.now(),
     );
 
-    if (picked != null) {
-      setState(() {
-        dateOfBirth = picked;
-      });
+    if (picked == null) {
+      return;
     }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      dateOfBirth = picked;
+    });
   }
 
-  //========================
-  // Pick Staff Photo
-  //========================
+  // ============================================================
+  // PICK STAFF PHOTO
+  // ============================================================
 
   Future<void> pickStaffImage() async {
     final picker = ImagePicker();
@@ -127,16 +141,25 @@ class _CreateStaffScreenState
       source: ImageSource.gallery,
     );
 
-    if (image != null) {
-      setState(() {
-        selectedImage = image;
-      });
+    if (image == null) {
+      return;
     }
+
+    final bytes = await image.readAsBytes();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      selectedImage = image;
+      selectedImageBytes = bytes;
+    });
   }
 
-  //========================
-  // Pick Qualification File
-  //========================
+  // ============================================================
+  // PICK QUALIFICATION DOCUMENT
+  // ============================================================
 
   Future<void> pickQualification() async {
     final result =
@@ -152,13 +175,275 @@ class _CreateStaffScreenState
       ],
     );
 
-    if (result != null) {
+    if (result == null) {
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      qualificationFile = result.files.first;
+    });
+  }
+
+  // ============================================================
+  // CREATE STAFF ACCOUNT
+  // ============================================================
+
+  Future<void> createAccount() async {
+    // -------------------------
+    // VALIDATION
+    // -------------------------
+
+    if (fullNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text("Please enter the staff full name."),
+        ),
+      );
+      return;
+    }
+
+    if (usernameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter a username."),
+        ),
+      );
+      return;
+    }
+
+    if (passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter a password."),
+        ),
+      );
+      return;
+    }
+
+    if (confirmPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text("Please confirm the password."),
+        ),
+      );
+      return;
+    }
+
+    if (passwordController.text !=
+        confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Passwords do not match."),
+        ),
+      );
+      return;
+    }
+
+    try {
+      // -------------------------
+      // GENERATE STAFF ID
+      // -------------------------
+
+      final generatedStaffID =
+          IDGenerator.generateStaffID();
+
+      staffID = generatedStaffID;
+
+      // -------------------------
+      // SAVE STAFF PHOTO
+      // -------------------------
+
+      String savedProfileImage = "";
+
+      if (selectedImage != null) {
+  final imageBytes =
+      await selectedImage!.readAsBytes();
+
+  savedProfileImage =
+      await FileStorage.saveStaffPhoto(
+    imageBytes,
+    fileName: selectedImage!.name,
+  );
+}
+
+      // -------------------------
+      // SAVE QUALIFICATION DOCUMENT
+      // -------------------------
+
+      String qualificationDocumentPath = "";
+
+      if (qualificationFile != null) {
+  Uint8List? documentBytes;
+
+  if (qualificationFile!.bytes != null) {
+    documentBytes = qualificationFile!.bytes;
+  } else if (qualificationFile!.path != null) {
+    documentBytes =
+        await File(qualificationFile!.path!)
+            .readAsBytes();
+  }
+
+  if (documentBytes != null) {
+    qualificationDocumentPath =
+        await FileStorage.saveStaffDocument(
+      documentBytes,
+      fileName: qualificationFile!.name,
+    );
+  }
+}
+
+      // -------------------------
+      // CREATE STAFF MODEL
+      // -------------------------
+
+      final StaffModel staff = StaffModel(
+        staffID: generatedStaffID,
+
+        profileImage: savedProfileImage,
+
+        qualificationDocument:
+            qualificationDocumentPath,
+
+        fullName:
+            fullNameController.text.trim(),
+
+        dateOfBirth: dateOfBirth == null
+            ? ""
+            : "${dateOfBirth!.day}/${dateOfBirth!.month}/${dateOfBirth!.year}",
+
+        gender: gender,
+
+        nationality:
+            nationalityController.text.trim(),
+
+        address:
+            addressController.text.trim(),
+
+        qualification:
+            highestQualification,
+
+        otherQualification:
+            otherQualificationController
+                .text
+                .trim(),
+
+        phone:
+            phoneController.text.trim(),
+
+        email:
+            emailController.text.trim(),
+
+        role: selectedRole,
+
+        username:
+            usernameController.text.trim(),
+
+        password:
+            passwordController.text,
+
+        accountStatus:
+            accountStatus,
+
+        createdDate: DateTime.now(),
+      );
+
+      // -------------------------
+      // SAVE TO DATABASE
+      // -------------------------
+
+      await DatabaseHelper.instance.insertStaff(
+        staff.toMap(),
+      );
+
+      // -------------------------
+      // UPDATE STAFF DATA
+      // -------------------------
+
+      StaffData.addStaff(staff);
+
+      if (!mounted) {
+        return;
+      }
+
+      // -------------------------
+      // SUCCESS MESSAGE
+      // -------------------------
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            "Staff account created successfully.\n"
+            "Staff ID: $generatedStaffID",
+          ),
+        ),
+      );
+
+      // -------------------------
+      // RESET FORM
+      // -------------------------
+
       setState(() {
-        qualificationFile =
-            result.files.first;
+        fullNameController.clear();
+        nationalityController.clear();
+        addressController.clear();
+
+        phoneController.clear();
+        emailController.clear();
+
+        usernameController.clear();
+        passwordController.clear();
+        confirmPasswordController.clear();
+
+        otherQualificationController.clear();
+
+        selectedImage = null;
+        selectedImageBytes = null;
+
+        qualificationFile = null;
+
+        gender = "Male";
+
+        selectedRole = "Teacher";
+
+        highestQualification =
+            "High School Diploma";
+
+        accountStatus = "Pending";
+
+        dateOfBirth = null;
+
+        staffID = "";
       });
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text(
+            "Failed to create staff account:\n$e",
+          ),
+        ),
+      );
+
+      debugPrint(
+        "CREATE STAFF ACCOUNT ERROR: $e",
+      );
     }
   }
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
 
   @override
   void dispose() {
@@ -178,130 +463,16 @@ class _CreateStaffScreenState
     super.dispose();
   }
 
-    Future<void> createAccount() async {
-    if (fullNameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter the staff full name."),
-        ),
-      );
-      return;
-    }
+  // ============================================================
+  // BUILD
+  // ============================================================
 
-    if (usernameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter a username."),
-        ),
-      );
-      return;
-    }
-
-    if (passwordController.text !=
-        confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Passwords do not match."),
-        ),
-      );
-      return;
-    }
-
-    staffID = IDGenerator.generateStaffID();
-
-    final StaffModel staff = StaffModel(
-      staffID: staffID,
-
-      profileImage: selectedImage?.path ?? "",
-
-      qualificationDocument:
-          qualificationFile?.path ?? "",
-
-      fullName: fullNameController.text.trim(),
-
-      dateOfBirth: dateOfBirth == null
-          ? ""
-          : "${dateOfBirth!.day}/${dateOfBirth!.month}/${dateOfBirth!.year}",
-
-      gender: gender,
-
-      nationality:
-          nationalityController.text.trim(),
-
-      address:
-          addressController.text.trim(),
-
-      qualification:
-          highestQualification,
-
-      otherQualification:
-          otherQualificationController.text.trim(),
-
-      phone: phoneController.text.trim(),
-
-      email: emailController.text.trim(),
-
-      role: selectedRole,
-
-      username:
-          usernameController.text.trim(),
-
-      password:
-          passwordController.text,
-
-      accountStatus:
-          accountStatus,
-
-      createdDate:
-          DateTime.now(),
-    );
-
-    await DatabaseHelper.instance.insertStaff(
-  staff.toMap(),
-);
-
-StaffData.addStaff(staff);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Staff account created successfully.\nID: $staffID",
-        ),
-      ),
-    );
-
-    setState(() {
-  fullNameController.clear();
-  nationalityController.clear();
-  addressController.clear();
-
-  phoneController.clear();
-  emailController.clear();
-
-  usernameController.clear();
-  passwordController.clear();
-  confirmPasswordController.clear();
-
-  otherQualificationController.clear();
-
-  selectedImage = null;
-  qualificationFile = null;
-
-  gender = "Male";
-  selectedRole = "Teacher";
-  highestQualification = "High School Diploma";
-  accountStatus = "Pending";
-  dateOfBirth = null;
-
-  staffID = "";
-});
-}
-
-    @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Create Staff Account"),
+        title:
+            const Text("Create Staff Account"),
         backgroundColor: Colors.amber,
         foregroundColor: Colors.black,
       ),
@@ -310,9 +481,13 @@ StaffData.addStaff(staff);
         padding: const EdgeInsets.all(20),
 
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
 
           children: [
+            // ==================================================
+            // STAFF INFORMATION
+            // ==================================================
 
             const Text(
               "Staff Information",
@@ -324,45 +499,61 @@ StaffData.addStaff(staff);
 
             const SizedBox(height: 25),
 
+            // ==================================================
+            // STAFF PHOTO
+            // ==================================================
+
             Center(
               child: Column(
                 children: [
-
                   CircleAvatar(
-                    radius: 50,
-                    backgroundImage: selectedImage != null
-    ? FileImage(
-        File(
-          selectedImage!.path,
-        ),
-      )
-    : null,
-                    child: selectedImage == null
-                        ? const Icon(
-                            Icons.person,
-                            size: 50,
-                          )
-                        : null,
+                    radius: 60,
+
+                    backgroundImage:
+                        selectedImageBytes != null
+                            ? MemoryImage(
+                                selectedImageBytes!,
+                              )
+                            : null,
+
+                    child:
+                        selectedImageBytes == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 60,
+                              )
+                            : null,
                   ),
 
                   const SizedBox(height: 15),
 
                   ElevatedButton.icon(
                     onPressed: pickStaffImage,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text("SELECT STAFF PHOTO"),
+                    icon: const Icon(
+                      Icons.camera_alt,
+                    ),
+                    label: const Text(
+                      "SELECT STAFF PHOTO",
+                    ),
                   ),
-
                 ],
               ),
             ),
 
             const SizedBox(height: 25),
 
+            // ==================================================
+            // DATE OF BIRTH
+            // ==================================================
+
             ListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: const BorderSide(color: Colors.grey),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(8),
+                side: const BorderSide(
+                  color: Colors.grey,
+                ),
               ),
 
               title: Text(
@@ -371,73 +562,113 @@ StaffData.addStaff(staff);
                     : "${dateOfBirth!.day}/${dateOfBirth!.month}/${dateOfBirth!.year}",
               ),
 
-              trailing: const Icon(Icons.calendar_today),
+              trailing: const Icon(
+                Icons.calendar_today,
+              ),
 
               onTap: pickDateOfBirth,
             ),
 
             const SizedBox(height: 15),
 
+            // ==================================================
+            // FULL NAME
+            // ==================================================
+
             TextField(
               controller: fullNameController,
-              decoration: const InputDecoration(
+              decoration:
+                  const InputDecoration(
                 labelText: "Full Name",
-                border: OutlineInputBorder(),
+                border:
+                    OutlineInputBorder(),
               ),
             ),
 
             const SizedBox(height: 15),
 
-            DropdownButtonFormField<String>(
-              value: gender,
+            // ==================================================
+            // GENDER
+            // ==================================================
 
-              decoration: const InputDecoration(
+            DropdownButtonFormField<String>(
+              initialValue: gender,
+
+              decoration:
+                  const InputDecoration(
                 labelText: "Gender",
-                border: OutlineInputBorder(),
+                border:
+                    OutlineInputBorder(),
               ),
 
-              items: genders.map((gender) {
-                return DropdownMenuItem(
-                  value: gender,
-                  child: Text(gender),
-                );
-              }).toList(),
+              items: genders.map(
+                (item) {
+                  return DropdownMenuItem(
+                    value: item,
+                    child: Text(item),
+                  );
+                },
+              ).toList(),
 
               onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+
                 setState(() {
-                  gender = value!;
+                  gender = value;
                 });
               },
             ),
 
             const SizedBox(height: 15),
 
+            // ==================================================
+            // NATIONALITY
+            // ==================================================
+
             TextField(
-              controller: nationalityController,
-              decoration: const InputDecoration(
+              controller:
+                  nationalityController,
+
+              decoration:
+                  const InputDecoration(
                 labelText: "Nationality",
-                border: OutlineInputBorder(),
+                border:
+                    OutlineInputBorder(),
               ),
             ),
 
             const SizedBox(height: 15),
 
+            // ==================================================
+            // ADDRESS
+            // ==================================================
+
             TextField(
-              controller: addressController,
+              controller:
+                  addressController,
+
               maxLines: 2,
-              decoration: const InputDecoration(
+
+              decoration:
+                  const InputDecoration(
                 labelText: "Address",
-                border: OutlineInputBorder(),
+                border:
+                    OutlineInputBorder(),
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 30),
 
+            // ==================================================
+            // QUALIFICATION INFORMATION
+            // ==================================================
 
-                        const Text(
+            const Text(
               "Qualification Information",
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -445,20 +676,34 @@ StaffData.addStaff(staff);
             const SizedBox(height: 15),
 
             DropdownButtonFormField<String>(
-              value: highestQualification,
-              decoration: const InputDecoration(
-                labelText: "Highest Qualification",
-                border: OutlineInputBorder(),
+              initialValue:
+                  highestQualification,
+
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    "Highest Qualification",
+                border:
+                    OutlineInputBorder(),
               ),
-              items: qualifications.map((qualification) {
-                return DropdownMenuItem(
-                  value: qualification,
-                  child: Text(qualification),
-                );
-              }).toList(),
+
+              items: qualifications.map(
+                (item) {
+                  return DropdownMenuItem(
+                    value: item,
+                    child: Text(item),
+                  );
+                },
+              ).toList(),
+
               onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+
                 setState(() {
-                  highestQualification = value!;
+                  highestQualification =
+                      value;
                 });
               },
             ),
@@ -466,51 +711,82 @@ StaffData.addStaff(staff);
             const SizedBox(height: 15),
 
             TextField(
-              controller: otherQualificationController,
+              controller:
+                  otherQualificationController,
+
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: "Other Qualification(s)",
-                border: OutlineInputBorder(),
+
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    "Other Qualification(s)",
+                border:
+                    OutlineInputBorder(),
               ),
             ),
 
             const SizedBox(height: 15),
 
+            // ==================================================
+            // QUALIFICATION DOCUMENT
+            // ==================================================
+
             Card(
               elevation: 2,
+
               child: Padding(
-                padding: const EdgeInsets.all(15),
+                padding:
+                    const EdgeInsets.all(15),
+
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+
                   children: [
-
                     Text(
-                      qualificationFile == null
+                      qualificationFile ==
+                              null
                           ? "No qualification document selected"
-                          : qualificationFile!.name,
-                    ),
+                          : qualificationFile!
+                              .name,
 
-                    const SizedBox(height: 10),
-
-                    ElevatedButton.icon(
-                      onPressed: pickQualification,
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text(
-                        "Choose Certificate",
+                      style:
+                          const TextStyle(
+                        fontSize: 15,
                       ),
                     ),
 
+                    const SizedBox(
+                      height: 10,
+                    ),
+
+                    ElevatedButton.icon(
+                      onPressed:
+                          pickQualification,
+
+                      icon: const Icon(
+                        Icons.upload_file,
+                      ),
+
+                      label: const Text(
+                        "CHOOSE CERTIFICATE",
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 30),
+
+            // ==================================================
+            // CONTACT INFORMATION
+            // ==================================================
 
             const Text(
               "Contact Information",
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -519,10 +795,16 @@ StaffData.addStaff(staff);
 
             TextField(
               controller: phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: "Phone Number",
-                border: OutlineInputBorder(),
+
+              keyboardType:
+                  TextInputType.phone,
+
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    "Phone Number",
+                border:
+                    OutlineInputBorder(),
               ),
             ),
 
@@ -530,19 +812,29 @@ StaffData.addStaff(staff);
 
             TextField(
               controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: "Email Address",
-                border: OutlineInputBorder(),
+
+              keyboardType:
+                  TextInputType.emailAddress,
+
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    "Email Address",
+                border:
+                    OutlineInputBorder(),
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 30),
 
-                        const Text(
+            // ==================================================
+            // EMPLOYMENT INFORMATION
+            // ==================================================
+
+            const Text(
               "Employment Information",
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -550,113 +842,197 @@ StaffData.addStaff(staff);
             const SizedBox(height: 15),
 
             DropdownButtonFormField<String>(
-              value: selectedRole,
-              decoration: const InputDecoration(
-                labelText: "Staff Role",
-                border: OutlineInputBorder(),
+              initialValue:
+                  selectedRole,
+
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    "Staff Role",
+                border:
+                    OutlineInputBorder(),
               ),
-              items: roles.map((role) {
-                return DropdownMenuItem(
-                  value: role,
-                  child: Text(role),
-                );
-              }).toList(),
+
+              items: roles.map(
+                (item) {
+                  return DropdownMenuItem(
+                    value: item,
+                    child: Text(item),
+                  );
+                },
+              ).toList(),
+
               onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+
                 setState(() {
-                  selectedRole = value!;
-                });
-              },
-            ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: usernameController,
-              decoration: const InputDecoration(
-                labelText: "Username",
-                border: OutlineInputBorder(),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Password",
-                border: OutlineInputBorder(),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Confirm Password",
-                border: OutlineInputBorder(),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: TextEditingController(
-                text: staffID,
-              ),
-              readOnly: true,
-              decoration: const InputDecoration(
-                labelText: "Staff ID",
-                border: OutlineInputBorder(),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            DropdownButtonFormField<String>(
-              value: accountStatus,
-              decoration: const InputDecoration(
-                labelText: "Account Status",
-                border: OutlineInputBorder(),
-              ),
-              items: accountStatuses.map((status) {
-                return DropdownMenuItem(
-                  value: status,
-                  child: Text(status),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  accountStatus = value!;
+                  selectedRole =
+                      value;
                 });
               },
             ),
 
             const SizedBox(height: 30),
 
-                        SizedBox(
+            // ==================================================
+            // ACCOUNT INFORMATION
+            // ==================================================
+
+            const Text(
+              "Account Information",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // ==================================================
+            // USERNAME
+            // ==================================================
+
+            TextField(
+              controller:
+                  usernameController,
+
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    "Username",
+                border:
+                    OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // ==================================================
+            // PASSWORD
+            // ==================================================
+
+            TextField(
+              controller:
+                  passwordController,
+
+              obscureText: true,
+
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    "Password",
+                border:
+                    OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // ==================================================
+            // CONFIRM PASSWORD
+            // ==================================================
+
+            TextField(
+              controller:
+                  confirmPasswordController,
+
+              obscureText: true,
+
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    "Confirm Password",
+                border:
+                    OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // ==================================================
+            // ACCOUNT STATUS
+            // ==================================================
+
+            DropdownButtonFormField<String>(
+              initialValue:
+                  accountStatus,
+
+              decoration:
+                  const InputDecoration(
+                labelText:
+                    "Account Status",
+                border:
+                    OutlineInputBorder(),
+              ),
+
+              items:
+                  accountStatuses.map(
+                (item) {
+                  return DropdownMenuItem(
+                    value: item,
+                    child: Text(item),
+                  );
+                },
+              ).toList(),
+
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+
+                setState(() {
+                  accountStatus =
+                      value;
+                });
+              },
+            ),
+
+            const SizedBox(height: 30),
+
+            // ==================================================
+            // CREATE STAFF ACCOUNT BUTTON
+            // ==================================================
+
+            SizedBox(
               width: double.infinity,
               height: 55,
+
               child: ElevatedButton(
-                onPressed: createAccount,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  foregroundColor: Colors.black,
+                onPressed:
+                    createAccount,
+
+                style:
+                    ElevatedButton.styleFrom(
+                  backgroundColor:
+                      Colors.amber,
+
+                  foregroundColor:
+                      Colors.black,
+
+                  shape:
+                      RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(
+                      8,
+                    ),
+                  ),
                 ),
+
                 child: const Text(
                   "CREATE STAFF ACCOUNT",
+
                   style: TextStyle(
                     fontSize: 17,
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                        FontWeight.bold,
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 20),
-
+            const SizedBox(height: 30),
           ],
         ),
       ),

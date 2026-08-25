@@ -1,17 +1,17 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as path;
+import 'package:sqflite_common/sqlite_api.dart';
+
+import 'database_factory.dart';
 
 class DatabaseHelper {
-
   DatabaseHelper._();
 
-  static final DatabaseHelper instance = DatabaseHelper._();
+  static final DatabaseHelper instance =
+      DatabaseHelper._();
 
-  static Database? _database;
-
+  Database? _database;
 
   Future<Database> get database async {
-
     if (_database != null) {
       return _database!;
     }
@@ -21,35 +21,26 @@ class DatabaseHelper {
     return _database!;
   }
 
-
-
   Future<Database> _initDatabase() async {
+    final databasePath = path.join(
+      'championone',
+      'championone.db',
+    );
 
-    final databasePath =
-        await getDatabasesPath();
-
-    final path = join(
+    return championDatabaseFactory.openDatabase(
       databasePath,
-      "championone.db",
+      options: OpenDatabaseOptions(
+        version: 3,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      ),
     );
-
-
-    return await openDatabase(
-      path,
-      version: 3,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
-
   }
-
-
 
   Future<void> _onCreate(
     Database db,
     int version,
   ) async {
-
     await db.execute('''
       CREATE TABLE staff(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,146 +65,134 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
-CREATE TABLE staff_documents(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  staffID TEXT,
-  documentType TEXT,
-  documentName TEXT,
-  filePath TEXT,
-  uploadDate TEXT
-)
-''');
-
-
-  }
-
-Future<void> _onUpgrade(
-  Database db,
-  int oldVersion,
-  int newVersion,
-) async {
-
-  if (oldVersion < 3) {
-
-    await db.execute('''
-    CREATE TABLE IF NOT EXISTS staff_documents(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      staffID TEXT,
-      documentType TEXT,
-      documentName TEXT,
-      filePath TEXT,
-      uploadDate TEXT
-    )
+      CREATE TABLE staff_documents(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffID TEXT,
+        documentType TEXT,
+        documentName TEXT,
+        filePath TEXT,
+        uploadDate TEXT
+      )
     ''');
-
   }
-}
+
+  Future<void> _onUpgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS staff_documents(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          staffID TEXT,
+          documentType TEXT,
+          documentName TEXT,
+          filePath TEXT,
+          uploadDate TEXT
+        )
+      ''');
+    }
+  }
+
+  // ============================================================
+  // STAFF
+  // ============================================================
 
   Future<int> insertStaff(
     Map<String, dynamic> staff,
   ) async {
-
     final db = await database;
 
-
-    return await db.insert(
+    return db.insert(
       'staff',
       staff,
       conflictAlgorithm:
           ConflictAlgorithm.replace,
     );
-
   }
 
-
-
   Future<List<Map<String, dynamic>>> getStaff() async {
-
     final db = await database;
 
-
-    return await db.query(
+    return db.query(
       'staff',
       orderBy: 'id DESC',
     );
-
   }
 
+  Future<int> updateStaff(
+    Map<String, dynamic> staff,
+  ) async {
+    final db = await database;
 
+    return db.update(
+      'staff',
+      staff,
+      where: 'staffID = ?',
+      whereArgs: [
+        staff['staffID'],
+      ],
+    );
+  }
 
   Future<int> deleteStaff(
     String staffID,
   ) async {
-
     final db = await database;
 
-
-    return await db.delete(
+    return db.delete(
       'staff',
       where: 'staffID = ?',
       whereArgs: [
         staffID,
       ],
     );
-
   }
 
-Future<int> updateStaff(
-  Map<String, dynamic> staff,
-) async {
+  // ============================================================
+  // STAFF DOCUMENTS
+  // ============================================================
 
-  final db = await database;
+  Future<int> insertDocument(
+    Map<String, dynamic> document,
+  ) async {
+    final db = await database;
 
-  return await db.update(
-    'staff',
-    staff,
-    where: 'staffID = ?',
-    whereArgs: [
-      staff['staffID'],
-    ],
-  );
+    return db.insert(
+      'staff_documents',
+      document,
+      conflictAlgorithm:
+          ConflictAlgorithm.replace,
+    );
+  }
 
-}
+  Future<List<Map<String, dynamic>>> getDocuments(
+    String staffID,
+  ) async {
+    final db = await database;
 
-Future<int> insertDocument(
-  Map<String, dynamic> document,
-) async {
+    return db.query(
+      'staff_documents',
+      where: 'staffID = ?',
+      whereArgs: [
+        staffID,
+      ],
+      orderBy: 'id DESC',
+    );
+  }
 
-  final db = await database;
+  Future<int> deleteDocument(
+    int id,
+  ) async {
+    final db = await database;
 
-  return await db.insert(
-    'staff_documents',
-    document,
-    conflictAlgorithm: ConflictAlgorithm.replace,
-  );
-
-}
-
-Future<List<Map<String, dynamic>>> getDocuments(
-  String staffID,
-) async {
-
-  final db = await database;
-
-  return await db.query(
-    'staff_documents',
-    where: 'staffID = ?',
-    whereArgs: [staffID],
-    orderBy: 'id DESC',
-  );
-
-}
-Future<int> deleteDocument(
-  int id,
-) async {
-
-  final db = await database;
-
-  return await db.delete(
-    'staff_documents',
-    where: 'id = ?',
-    whereArgs: [id],
-  );
-
-}
+    return db.delete(
+      'staff_documents',
+      where: 'id = ?',
+      whereArgs: [
+        id,
+      ],
+    );
+  }
 }
