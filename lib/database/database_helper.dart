@@ -11,6 +11,10 @@ class DatabaseHelper {
 
   Database? _database;
 
+  // ============================================================
+  // DATABASE
+  // ============================================================
+
   Future<Database> get database async {
     if (_database != null) {
       return _database!;
@@ -30,17 +34,25 @@ class DatabaseHelper {
     return championDatabaseFactory.openDatabase(
       databasePath,
       options: OpenDatabaseOptions(
-        version: 3,
+        version: 4,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       ),
     );
   }
 
+  // ============================================================
+  // DATABASE CREATION
+  // ============================================================
+
   Future<void> _onCreate(
     Database db,
     int version,
   ) async {
+    // ----------------------------------------------------------
+    // STAFF
+    // ----------------------------------------------------------
+
     await db.execute('''
       CREATE TABLE staff(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,6 +76,10 @@ class DatabaseHelper {
       )
     ''');
 
+    // ----------------------------------------------------------
+    // STAFF DOCUMENTS
+    // ----------------------------------------------------------
+
     await db.execute('''
       CREATE TABLE staff_documents(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,13 +90,77 @@ class DatabaseHelper {
         uploadDate TEXT
       )
     ''');
+
+    // ----------------------------------------------------------
+    // STUDENTS
+    // ----------------------------------------------------------
+
+    await db.execute('''
+      CREATE TABLE students(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        studentID TEXT UNIQUE,
+
+        fullName TEXT,
+        preferredName TEXT,
+        dateOfBirth TEXT,
+        gender TEXT,
+        nationality TEXT,
+        address TEXT,
+        phone TEXT,
+
+        schoolType TEXT,
+        admissionCategory TEXT,
+        academicYear TEXT,
+        admissionDate TEXT,
+        studentStatus TEXT,
+
+        classGrade TEXT,
+
+        previousSchool TEXT,
+        previousGrade TEXT,
+        previousAcademicYear TEXT,
+
+        faculty TEXT,
+        department TEXT,
+        program TEXT,
+        major TEXT,
+        trainingLevel TEXT,
+        practicalExperience TEXT,
+
+        parentGuardianName TEXT,
+        parentGuardianRelationship TEXT,
+        parentGuardianPhone TEXT,
+        parentGuardianEmail TEXT,
+        parentGuardianAddress TEXT,
+        parentGuardianOccupation TEXT,
+
+        emergencyContactName TEXT,
+        emergencyContactPhone TEXT,
+
+        studentPhoto TEXT,
+
+        transcriptDocument TEXT,
+        recommendationDocument TEXT,
+        transferCertificate TEXT,
+        otherDocuments TEXT
+      )
+    ''');
   }
+
+  // ============================================================
+  // DATABASE UPGRADE
+  // ============================================================
 
   Future<void> _onUpgrade(
     Database db,
     int oldVersion,
     int newVersion,
   ) async {
+    // ----------------------------------------------------------
+    // VERSION 3
+    // Adds staff_documents
+    // ----------------------------------------------------------
+
     if (oldVersion < 3) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS staff_documents(
@@ -90,6 +170,64 @@ class DatabaseHelper {
           documentName TEXT,
           filePath TEXT,
           uploadDate TEXT
+        )
+      ''');
+    }
+
+    // ----------------------------------------------------------
+    // VERSION 4
+    // Adds students
+    // ----------------------------------------------------------
+
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS students(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          studentID TEXT UNIQUE,
+
+          fullName TEXT,
+          preferredName TEXT,
+          dateOfBirth TEXT,
+          gender TEXT,
+          nationality TEXT,
+          address TEXT,
+          phone TEXT,
+
+          schoolType TEXT,
+          admissionCategory TEXT,
+          academicYear TEXT,
+          admissionDate TEXT,
+          studentStatus TEXT,
+
+          classGrade TEXT,
+
+          previousSchool TEXT,
+          previousGrade TEXT,
+          previousAcademicYear TEXT,
+
+          faculty TEXT,
+          department TEXT,
+          program TEXT,
+          major TEXT,
+          trainingLevel TEXT,
+          practicalExperience TEXT,
+
+          parentGuardianName TEXT,
+          parentGuardianRelationship TEXT,
+          parentGuardianPhone TEXT,
+          parentGuardianEmail TEXT,
+          parentGuardianAddress TEXT,
+          parentGuardianOccupation TEXT,
+
+          emergencyContactName TEXT,
+          emergencyContactPhone TEXT,
+
+          studentPhoto TEXT,
+
+          transcriptDocument TEXT,
+          recommendationDocument TEXT,
+          transferCertificate TEXT,
+          otherDocuments TEXT
         )
       ''');
     }
@@ -192,6 +330,61 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [
         id,
+      ],
+    );
+  }
+
+  // ============================================================
+  // STUDENTS
+  // ============================================================
+
+  Future<int> insertStudent(
+    Map<String, dynamic> student,
+  ) async {
+    final db = await database;
+
+    return db.insert(
+      'students',
+      student,
+      conflictAlgorithm:
+          ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getStudents() async {
+    final db = await database;
+
+    return db.query(
+      'students',
+      orderBy: 'id DESC',
+    );
+  }
+
+  Future<int> updateStudent(
+    Map<String, dynamic> student,
+  ) async {
+    final db = await database;
+
+    return db.update(
+      'students',
+      student,
+      where: 'studentID = ?',
+      whereArgs: [
+        student['studentID'],
+      ],
+    );
+  }
+
+  Future<int> deleteStudent(
+    String studentID,
+  ) async {
+    final db = await database;
+
+    return db.delete(
+      'students',
+      where: 'studentID = ?',
+      whereArgs: [
+        studentID,
       ],
     );
   }
