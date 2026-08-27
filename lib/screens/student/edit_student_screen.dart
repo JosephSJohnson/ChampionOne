@@ -323,8 +323,23 @@ class _EditStudentScreenState
           widget.student.transferCertificate,
 
       otherDocuments:
+      
           widget.student.otherDocuments,
+
+      biometricStatus:
+    widget.student.biometricStatus,
+
+biometricReference:
+    widget.student.biometricReference,
+
+biometricProvider:
+    widget.student.biometricProvider,
+
+biometricEnrolledDate:
+    widget.student.biometricEnrolledDate,
     );
+
+    
 
     try {
       await DatabaseHelper.instance

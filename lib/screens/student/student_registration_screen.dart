@@ -34,50 +34,71 @@ class _StudentRegistrationScreenState
 
   final classGradeController = TextEditingController();
 
-  final previousSchoolController = TextEditingController();
-  final previousGradeController = TextEditingController();
+  final previousSchoolController =
+      TextEditingController();
+
+  final previousGradeController =
+      TextEditingController();
+
   final previousAcademicYearController =
       TextEditingController();
 
-  final facultyController = TextEditingController();
-  final departmentController = TextEditingController();
-  final programController = TextEditingController();
-  final majorController = TextEditingController();
+  final facultyController =
+      TextEditingController();
+
+  final departmentController =
+      TextEditingController();
+
+  final programController =
+      TextEditingController();
+
+  final majorController =
+      TextEditingController();
+
   final trainingLevelController =
       TextEditingController();
+
   final practicalExperienceController =
       TextEditingController();
 
   final existingStudentIDController =
       TextEditingController();
+
   final previousPrimaryClassController =
       TextEditingController();
 
   final pickupAuthorizationController =
       TextEditingController();
+
   final careInstructionsController =
       TextEditingController();
 
   final parentGuardianNameController =
       TextEditingController();
+
   final parentGuardianRelationshipController =
       TextEditingController();
+
   final parentGuardianPhoneController =
       TextEditingController();
+
   final parentGuardianEmailController =
       TextEditingController();
+
   final parentGuardianAddressController =
       TextEditingController();
+
   final parentGuardianOccupationController =
       TextEditingController();
 
   final emergencyContactNameController =
       TextEditingController();
+
   final emergencyContactPhoneController =
       TextEditingController();
 
   // ============================================================
-  // DROPDOWN / DATE VALUES
+  // SELECTIONS
   // ============================================================
 
   String selectedSchoolType =
@@ -91,11 +112,33 @@ class _StudentRegistrationScreenState
   String selectedStudentStatus =
       "Pending";
 
-  String academicYear = "2026/2027";
+  String academicYear =
+      "2026/2027";
 
   String dateOfBirth = "";
 
   String admissionDate = "";
+
+  // ============================================================
+  // CHAMPIONONE STUDENT ID
+  // ============================================================
+
+  bool? hasPreviousChampionOneID;
+
+  String generatedStudentID = "";
+
+  // ============================================================
+  // BIOMETRIC
+  // ============================================================
+
+  String biometricStatus =
+      "Not Enrolled";
+
+  String biometricReference = "";
+
+  String biometricProvider = "";
+
+  String biometricEnrolledDate = "";
 
   // ============================================================
   // FILES
@@ -103,6 +146,10 @@ class _StudentRegistrationScreenState
 
   Uint8List? studentPhotoBytes;
   String studentPhotoName = "";
+
+  // Parent / Guardian photo
+  Uint8List? parentPhotoBytes;
+  String parentPhotoName = "";
 
   Uint8List? transcriptBytes;
   String transcriptName = "";
@@ -118,9 +165,6 @@ class _StudentRegistrationScreenState
 
   bool isSaving = false;
 
-bool? hasPreviousChampionOneID;
-
-String generatedStudentID = "";
   // ============================================================
   // SCHOOL TYPES
   // ============================================================
@@ -158,155 +202,6 @@ String generatedStudentID = "";
   ];
 
   // ============================================================
-  // DISPOSE
-  // ============================================================
-
-  @override
-  void dispose() {
-    fullNameController.dispose();
-    preferredNameController.dispose();
-    nationalityController.dispose();
-    addressController.dispose();
-    phoneController.dispose();
-
-    classGradeController.dispose();
-
-    previousSchoolController.dispose();
-    previousGradeController.dispose();
-    previousAcademicYearController
-        .dispose();
-
-    facultyController.dispose();
-    departmentController.dispose();
-    programController.dispose();
-    majorController.dispose();
-    trainingLevelController.dispose();
-    practicalExperienceController
-        .dispose();
-
-    existingStudentIDController.dispose();
-    previousPrimaryClassController.dispose();
-
-    pickupAuthorizationController.dispose();
-    careInstructionsController.dispose();
-
-    parentGuardianNameController.dispose();
-    parentGuardianRelationshipController
-        .dispose();
-    parentGuardianPhoneController.dispose();
-    parentGuardianEmailController.dispose();
-    parentGuardianAddressController.dispose();
-    parentGuardianOccupationController
-        .dispose();
-
-    emergencyContactNameController.dispose();
-    emergencyContactPhoneController
-        .dispose();
-
-    super.dispose();
-  }
-
-  // ============================================================
-  // DATE PICKER
-  // ============================================================
-
-  Future<void> pickDate({
-    required bool dateOfBirthField,
-  }) async {
-    final selected =
-        await showDatePicker(
-      context: context,
-      firstDate: DateTime(1950),
-      lastDate:
-          DateTime.now().add(
-        const Duration(days: 3650),
-      ),
-      initialDate: DateTime.now(),
-    );
-
-    if (selected == null) {
-      return;
-    }
-
-    final formatted =
-        "${selected.year.toString().padLeft(4, '0')}-"
-        "${selected.month.toString().padLeft(2, '0')}-"
-        "${selected.day.toString().padLeft(2, '0')}";
-
-    setState(() {
-      if (dateOfBirthField) {
-        dateOfBirth = formatted;
-      } else {
-        admissionDate = formatted;
-      }
-    });
-  }
-
-  // ============================================================
-  // FILE PICKER
-  // ============================================================
-
-  Future<void> pickPhoto() async {
-    final result =
-        await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      withData: true,
-    );
-
-    if (result == null) {
-      return;
-    }
-
-    final file = result.files.single;
-
-    if (file.bytes == null) {
-      return;
-    }
-
-    setState(() {
-      studentPhotoBytes = file.bytes;
-      studentPhotoName = file.name;
-    });
-  }
-
-  Future<void> pickDocument({
-    required String documentType,
-  }) async {
-    final result =
-        await FilePicker.platform.pickFiles(
-      withData: true,
-    );
-
-    if (result == null) {
-      return;
-    }
-
-    final file = result.files.single;
-
-    if (file.bytes == null) {
-      return;
-    }
-
-    setState(() {
-      if (documentType == "transcript") {
-        transcriptBytes = file.bytes;
-        transcriptName = file.name;
-      } else if (documentType ==
-          "recommendation") {
-        recommendationBytes = file.bytes;
-        recommendationName = file.name;
-      } else if (documentType ==
-          "transfer") {
-        transferCertificateBytes = file.bytes;
-        transferCertificateName = file.name;
-      } else {
-        otherDocumentBytes = file.bytes;
-        otherDocumentName = file.name;
-      }
-    });
-  }
-
-  // ============================================================
   // SCHOOL TYPE HELPERS
   // ============================================================
 
@@ -327,22 +222,16 @@ String generatedStudentID = "";
       "Secondary School";
 
   bool get isCollege =>
-      selectedSchoolType == "College";
+      selectedSchoolType ==
+      "College";
 
   bool get isUniversity =>
-      selectedSchoolType == "University";
+      selectedSchoolType ==
+      "University";
 
   bool get isVocational =>
       selectedSchoolType ==
       "Vocational / Technical Training Institute";
-
-  bool get showAcademicHistory =>
-      isPrimary ||
-      isPrimarySecondary ||
-      isSecondary ||
-      isCollege ||
-      isUniversity ||
-      isVocational;
 
   bool get showHigherEducation =>
       isCollege || isUniversity;
@@ -360,46 +249,270 @@ String generatedStudentID = "";
       isVocational;
 
   // ============================================================
-  // FORM VALIDATION
+  // INITIALIZE
   // ============================================================
 
-  bool validateApplication() {
-    if (!formKey.currentState!.validate()) {
-      return false;
-    }
+  @override
+  void initState() {
+    super.initState();
 
-    if (dateOfBirth.isEmpty) {
-      showMessage(
-        "Please select the student's date of birth.",
-      );
-      return false;
-    }
-
-    if (admissionDate.isEmpty) {
-      showMessage(
-        "Please select the admission date.",
-      );
-      return false;
-    }
-
-    if (isPrimarySecondary &&
-        existingStudentIDController
-            .text
-            .trim()
-            .isEmpty) {
-      showMessage(
-        "Please enter the existing Student ID "
-        "for internal progression, or enter "
-        "the appropriate admission information.",
-      );
-      return false;
-    }
-
-    return true;
+    generatedStudentID =
+        generateStudentID();
   }
 
-  void showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
+  // ============================================================
+  // DISPOSE
+  // ============================================================
+
+  @override
+  void dispose() {
+    fullNameController.dispose();
+    preferredNameController.dispose();
+    nationalityController.dispose();
+    addressController.dispose();
+    phoneController.dispose();
+
+    classGradeController.dispose();
+
+    previousSchoolController.dispose();
+    previousGradeController.dispose();
+    previousAcademicYearController.dispose();
+
+    facultyController.dispose();
+    departmentController.dispose();
+    programController.dispose();
+    majorController.dispose();
+    trainingLevelController.dispose();
+    practicalExperienceController.dispose();
+
+    existingStudentIDController.dispose();
+    previousPrimaryClassController.dispose();
+
+    pickupAuthorizationController.dispose();
+    careInstructionsController.dispose();
+
+    parentGuardianNameController.dispose();
+    parentGuardianRelationshipController.dispose();
+    parentGuardianPhoneController.dispose();
+    parentGuardianEmailController.dispose();
+    parentGuardianAddressController.dispose();
+    parentGuardianOccupationController.dispose();
+
+    emergencyContactNameController.dispose();
+    emergencyContactPhoneController.dispose();
+    emergencyContactPhoneController.dispose();
+
+    super.dispose();
+  }
+
+  // ============================================================
+  // DATE PICKER
+  // ============================================================
+
+  Future<void> pickDate({
+    required bool dateOfBirthField,
+  }) async {
+    final now = DateTime.now();
+
+    final selected = await showDatePicker(
+      context: context,
+
+      // Allow historical birth dates.
+      firstDate: DateTime(
+        1900,
+        1,
+        1,
+      ),
+
+      // Never allow future dates.
+      lastDate: now,
+
+      // Start DOB picker around 18 years ago.
+      initialDate: dateOfBirthField
+          ? DateTime(
+              now.year - 18,
+              now.month,
+              now.day,
+            )
+          : now,
+    );
+
+    if (selected == null) {
+      return;
+    }
+
+    final formatted =
+        "${selected.year.toString().padLeft(4, '0')}-"
+        "${selected.month.toString().padLeft(2, '0')}-"
+        "${selected.day.toString().padLeft(2, '0')}";
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      if (dateOfBirthField) {
+        dateOfBirth = formatted;
+      } else {
+        admissionDate = formatted;
+      }
+    });
+  }
+
+  // ============================================================
+  // STUDENT PHOTO
+  // ============================================================
+
+  Future<void> pickPhoto() async {
+    final result =
+        await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    final file = result.files.single;
+
+    if (file.bytes == null) {
+      if (!mounted) {
+        return;
+      }
+
+      showMessage(
+        "Unable to read the selected student photo.",
+      );
+
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      studentPhotoBytes = file.bytes;
+      studentPhotoName = file.name;
+    });
+  }
+
+  // ============================================================
+  // PARENT / GUARDIAN PHOTO
+  // ============================================================
+
+  Future<void> pickParentPhoto() async {
+    final result =
+        await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    final file = result.files.single;
+
+    if (file.bytes == null) {
+      if (!mounted) {
+        return;
+      }
+
+      showMessage(
+        "Unable to read the selected parent photo.",
+      );
+
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      parentPhotoBytes = file.bytes;
+      parentPhotoName = file.name;
+    });
+  }
+
+  // ============================================================
+  // DOCUMENT PICKER
+  // ============================================================
+
+  Future<void> pickDocument({
+    required String documentType,
+  }) async {
+    final result =
+        await FilePicker.platform.pickFiles(
+      withData: true,
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    final file = result.files.single;
+
+    if (file.bytes == null) {
+      if (!mounted) {
+        return;
+      }
+
+      showMessage(
+        "Unable to read the selected document.",
+      );
+
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      switch (documentType) {
+        case "transcript":
+          transcriptBytes = file.bytes;
+          transcriptName = file.name;
+          break;
+
+        case "recommendation":
+          recommendationBytes = file.bytes;
+          recommendationName =
+              file.name;
+          break;
+
+        case "transfer":
+          transferCertificateBytes =
+              file.bytes;
+          transferCertificateName =
+              file.name;
+          break;
+
+        default:
+          otherDocumentBytes =
+              file.bytes;
+          otherDocumentName =
+              file.name;
+      }
+    });
+  }
+
+  // ============================================================
+  // MESSAGE
+  // ============================================================
+
+  void showMessage(
+    String message,
+  ) {
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
       SnackBar(
         content: Text(message),
       ),
@@ -412,31 +525,109 @@ String generatedStudentID = "";
 
   String generateStudentID() {
     final timestamp =
-        DateTime.now().millisecondsSinceEpoch;
+        DateTime.now()
+            .millisecondsSinceEpoch;
 
     return "STU-$timestamp";
   }
 
   String resolveStudentID() {
-  // Existing ChampionOne ID
-  if (hasPreviousChampionOneID == true) {
-    final previousID =
-        existingStudentIDController.text.trim();
+    if (hasPreviousChampionOneID ==
+        true) {
+      final previousID =
+          existingStudentIDController
+              .text
+              .trim();
 
-    if (previousID.isNotEmpty) {
-      return previousID;
+      if (previousID.isNotEmpty) {
+        return previousID;
+      }
     }
+
+    if (generatedStudentID.isEmpty) {
+      generatedStudentID =
+          generateStudentID();
+    }
+
+    return generatedStudentID;
   }
 
-  // Generate once and keep the same ID
-  // through Preview and Save.
-  if (generatedStudentID.isEmpty) {
-    generatedStudentID =
-        generateStudentID();
-  }
+  // ============================================================
+  // VALIDATION
+  // ============================================================
 
-  return generatedStudentID;
-}
+  bool validateApplication() {
+    if (!formKey.currentState!.validate()) {
+      return false;
+    }
+
+    if (dateOfBirth.isEmpty) {
+      showMessage(
+        "Please select the student's date of birth.",
+      );
+
+      return false;
+    }
+
+    if (admissionDate.isEmpty) {
+      showMessage(
+        "Please select the admission date.",
+      );
+
+      return false;
+    }
+
+    // ----------------------------------------------------------
+    // NEW STUDENT
+    // ----------------------------------------------------------
+
+    if (selectedAdmissionCategory ==
+        "New Student") {
+      if (hasPreviousChampionOneID ==
+          null) {
+        showMessage(
+          "Please indicate whether the student has a previous ChampionOne ID.",
+        );
+
+        return false;
+      }
+
+      if (hasPreviousChampionOneID ==
+              true &&
+          existingStudentIDController
+              .text
+              .trim()
+              .isEmpty) {
+        showMessage(
+          "Please enter the previous ChampionOne Student ID.",
+        );
+
+        return false;
+      }
+    }
+
+    // ----------------------------------------------------------
+    // RETURNING / PROMOTION
+    // ----------------------------------------------------------
+
+    if (selectedAdmissionCategory ==
+            "Returning Student" ||
+        selectedAdmissionCategory ==
+            "Promotion / Internal Progression") {
+      if (existingStudentIDController
+          .text
+          .trim()
+          .isEmpty) {
+        showMessage(
+          "Please enter the student's existing ChampionOne ID.",
+        );
+
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   // ============================================================
   // REVIEW
@@ -447,8 +638,13 @@ String generatedStudentID = "";
       return;
     }
 
+    final studentID =
+        resolveStudentID();
+
     final draft =
-        _buildReviewData();
+        _buildReviewData(
+      studentID,
+    );
 
     final confirmed =
         await Navigator.push<bool>(
@@ -461,98 +657,200 @@ String generatedStudentID = "";
       ),
     );
 
+    if (!mounted) {
+      return;
+    }
+
     if (confirmed == true) {
-      await saveStudent();
+      await saveStudent(
+        studentID,
+      );
     }
   }
 
-  Map<String, dynamic> _buildReviewData() {
+  // ============================================================
+  // REVIEW DATA
+  // ============================================================
+
+  Map<String, dynamic>
+      _buildReviewData(
+    String studentID,
+  ) {
     return {
-      "schoolType": selectedSchoolType,
+      "schoolType":
+          selectedSchoolType,
+
       "admissionCategory":
           selectedAdmissionCategory,
-      "studentID": generateStudentID(),
+
+      "studentID":
+          studentID,
+
       "fullName":
-          fullNameController.text.trim(),
+          fullNameController
+              .text
+              .trim(),
+
       "preferredName":
-          preferredNameController.text.trim(),
-      "dateOfBirth": dateOfBirth,
-      "gender": selectedGender,
+          preferredNameController
+              .text
+              .trim(),
+
+      "dateOfBirth":
+          dateOfBirth,
+
+      "gender":
+          selectedGender,
+
       "nationality":
-          nationalityController.text.trim(),
+          nationalityController
+              .text
+              .trim(),
+
       "address":
-          addressController.text.trim(),
+          addressController
+              .text
+              .trim(),
+
       "phone":
-          phoneController.text.trim(),
-      "academicYear": academicYear,
-      "admissionDate": admissionDate,
-      "studentStatus": selectedStudentStatus,
+          phoneController
+              .text
+              .trim(),
+
+      "academicYear":
+          academicYear,
+
+      "admissionDate":
+          admissionDate,
+
+      "studentStatus":
+          selectedStudentStatus,
+
       "classGrade":
-          classGradeController.text.trim(),
+          classGradeController
+              .text
+              .trim(),
+
       "previousSchool":
-          previousSchoolController.text.trim(),
+          previousSchoolController
+              .text
+              .trim(),
+
       "previousGrade":
-          previousGradeController.text.trim(),
+          previousGradeController
+              .text
+              .trim(),
+
       "previousAcademicYear":
-          previousAcademicYearController.text
+          previousAcademicYearController
+              .text
               .trim(),
+
       "faculty":
-          facultyController.text.trim(),
+          facultyController
+              .text
+              .trim(),
+
       "department":
-          departmentController.text.trim(),
+          departmentController
+              .text
+              .trim(),
+
       "program":
-          programController.text.trim(),
+          programController
+              .text
+              .trim(),
+
       "major":
-          majorController.text.trim(),
+          majorController
+              .text
+              .trim(),
+
       "trainingLevel":
-          trainingLevelController.text.trim(),
+          trainingLevelController
+              .text
+              .trim(),
+
       "practicalExperience":
-          practicalExperienceController.text
+          practicalExperienceController
+              .text
               .trim(),
+
       "parentGuardianName":
-          parentGuardianNameController.text
+          parentGuardianNameController
+              .text
               .trim(),
+
       "parentGuardianRelationship":
           parentGuardianRelationshipController
               .text
               .trim(),
+
       "parentGuardianPhone":
-          parentGuardianPhoneController.text
+          parentGuardianPhoneController
+              .text
               .trim(),
+
       "parentGuardianEmail":
-          parentGuardianEmailController.text
+          parentGuardianEmailController
+              .text
               .trim(),
+
       "parentGuardianAddress":
-          parentGuardianAddressController.text
+          parentGuardianAddressController
+              .text
               .trim(),
+
       "parentGuardianOccupation":
           parentGuardianOccupationController
               .text
               .trim(),
+
       "emergencyContactName":
-          emergencyContactNameController.text
+          emergencyContactNameController
+              .text
               .trim(),
+
       "emergencyContactPhone":
-          emergencyContactPhoneController.text
+          emergencyContactPhoneController
+              .text
               .trim(),
-      "existingStudentID":
-          existingStudentIDController.text
-              .trim(),
+
       "previousPrimaryClass":
-          previousPrimaryClassController.text
+          previousPrimaryClassController
+              .text
               .trim(),
+
       "pickupAuthorization":
-          pickupAuthorizationController.text
+          pickupAuthorizationController
+              .text
               .trim(),
+
       "careInstructions":
-          careInstructionsController.text.trim(),
-      "studentPhoto": studentPhotoName,
-      "transcript": transcriptName,
-      "recommendation": recommendationName,
+          careInstructionsController
+              .text
+              .trim(),
+
+      "studentPhoto":
+          studentPhotoName,
+
+      "parentPhoto":
+          parentPhotoName,
+
+      "transcript":
+          transcriptName,
+
+      "recommendation":
+          recommendationName,
+
       "transferCertificate":
           transferCertificateName,
+
       "otherDocument":
           otherDocumentName,
+
+      "biometricStatus":
+          biometricStatus,
     };
   }
 
@@ -560,7 +858,9 @@ String generatedStudentID = "";
   // SAVE STUDENT
   // ============================================================
 
-  Future<void> saveStudent() async {
+  Future<void> saveStudent(
+    String studentID,
+  ) async {
     if (isSaving) {
       return;
     }
@@ -570,48 +870,72 @@ String generatedStudentID = "";
     });
 
     try {
-      final studentID =
-          generateStudentID();
-
       String studentPhotoPath = "";
+      String parentPhotoPath = "";
+
       String transcriptPath = "";
       String recommendationPath = "";
       String transferPath = "";
       String otherDocumentPath = "";
 
       // --------------------------------------------------------
-      // PHOTO
+      // STUDENT PHOTO
       // --------------------------------------------------------
 
       if (studentPhotoBytes != null) {
         studentPhotoPath =
             await FileStorage.saveStaffPhoto(
           studentPhotoBytes!,
-          fileName: studentPhotoName,
+          fileName:
+              studentPhotoName,
         );
       }
 
       // --------------------------------------------------------
-      // DOCUMENTS
+      // PARENT / GUARDIAN PHOTO
+      // --------------------------------------------------------
+
+      if (parentPhotoBytes != null) {
+        parentPhotoPath =
+            await FileStorage.saveStaffPhoto(
+          parentPhotoBytes!,
+          fileName:
+              parentPhotoName,
+        );
+      }
+
+      // --------------------------------------------------------
+      // TRANSCRIPT
       // --------------------------------------------------------
 
       if (transcriptBytes != null) {
         transcriptPath =
             await FileStorage.saveStaffDocument(
           transcriptBytes!,
-          fileName: transcriptName,
+          fileName:
+              transcriptName,
         );
       }
+
+      // --------------------------------------------------------
+      // RECOMMENDATION
+      // --------------------------------------------------------
 
       if (recommendationBytes != null) {
         recommendationPath =
             await FileStorage.saveStaffDocument(
           recommendationBytes!,
-          fileName: recommendationName,
+          fileName:
+              recommendationName,
         );
       }
 
-      if (transferCertificateBytes != null) {
+      // --------------------------------------------------------
+      // TRANSFER
+      // --------------------------------------------------------
+
+      if (transferCertificateBytes !=
+          null) {
         transferPath =
             await FileStorage.saveStaffDocument(
           transferCertificateBytes!,
@@ -620,26 +944,37 @@ String generatedStudentID = "";
         );
       }
 
+      // --------------------------------------------------------
+      // OTHER DOCUMENT
+      // --------------------------------------------------------
+
       if (otherDocumentBytes != null) {
         otherDocumentPath =
             await FileStorage.saveStaffDocument(
           otherDocumentBytes!,
-          fileName: otherDocumentName,
+          fileName:
+              otherDocumentName,
         );
       }
 
       // --------------------------------------------------------
-      // STUDENT OBJECT
+      // STUDENT MODEL
       // --------------------------------------------------------
 
-      final student = StudentModel(
-        studentID: studentID,
+      final student =
+          StudentModel(
+        studentID:
+            studentID,
 
         fullName:
-            fullNameController.text.trim(),
+            fullNameController
+                .text
+                .trim(),
 
         preferredName:
-            preferredNameController.text.trim(),
+            preferredNameController
+                .text
+                .trim(),
 
         dateOfBirth:
             dateOfBirth,
@@ -648,13 +983,19 @@ String generatedStudentID = "";
             selectedGender,
 
         nationality:
-            nationalityController.text.trim(),
+            nationalityController
+                .text
+                .trim(),
 
         address:
-            addressController.text.trim(),
+            addressController
+                .text
+                .trim(),
 
         phone:
-            phoneController.text.trim(),
+            phoneController
+                .text
+                .trim(),
 
         schoolType:
             selectedSchoolType,
@@ -672,39 +1013,58 @@ String generatedStudentID = "";
             selectedStudentStatus,
 
         classGrade:
-            classGradeController.text.trim(),
+            classGradeController
+                .text
+                .trim(),
 
         previousSchool:
-            previousSchoolController.text.trim(),
+            previousSchoolController
+                .text
+                .trim(),
 
         previousGrade:
-            previousGradeController.text.trim(),
+            previousGradeController
+                .text
+                .trim(),
 
         previousAcademicYear:
-            previousAcademicYearController.text
+            previousAcademicYearController
+                .text
                 .trim(),
 
         faculty:
-            facultyController.text.trim(),
+            facultyController
+                .text
+                .trim(),
 
         department:
-            departmentController.text.trim(),
+            departmentController
+                .text
+                .trim(),
 
         program:
-            programController.text.trim(),
+            programController
+                .text
+                .trim(),
 
         major:
-            majorController.text.trim(),
+            majorController
+                .text
+                .trim(),
 
         trainingLevel:
-            trainingLevelController.text.trim(),
+            trainingLevelController
+                .text
+                .trim(),
 
         practicalExperience:
-            practicalExperienceController.text
+            practicalExperienceController
+                .text
                 .trim(),
 
         parentGuardianName:
-            parentGuardianNameController.text
+            parentGuardianNameController
+                .text
                 .trim(),
 
         parentGuardianRelationship:
@@ -713,15 +1073,18 @@ String generatedStudentID = "";
                 .trim(),
 
         parentGuardianPhone:
-            parentGuardianPhoneController.text
+            parentGuardianPhoneController
+                .text
                 .trim(),
 
         parentGuardianEmail:
-            parentGuardianEmailController.text
+            parentGuardianEmailController
+                .text
                 .trim(),
 
         parentGuardianAddress:
-            parentGuardianAddressController.text
+            parentGuardianAddressController
+                .text
                 .trim(),
 
         parentGuardianOccupation:
@@ -730,15 +1093,32 @@ String generatedStudentID = "";
                 .trim(),
 
         emergencyContactName:
-            emergencyContactNameController.text
+            emergencyContactNameController
+                .text
                 .trim(),
 
         emergencyContactPhone:
-            emergencyContactPhoneController.text
+            emergencyContactPhoneController
+                .text
                 .trim(),
+
+        // ------------------------------------------------------
+        // PARENT PHOTO
+        // ------------------------------------------------------
+
+        parentPhoto:
+            parentPhotoPath,
+
+        // ------------------------------------------------------
+        // STUDENT PHOTO
+        // ------------------------------------------------------
 
         studentPhoto:
             studentPhotoPath,
+
+        // ------------------------------------------------------
+        // DOCUMENTS
+        // ------------------------------------------------------
 
         transcriptDocument:
             transcriptPath,
@@ -751,6 +1131,22 @@ String generatedStudentID = "";
 
         otherDocuments:
             otherDocumentPath,
+
+        // ------------------------------------------------------
+        // BIOMETRIC
+        // ------------------------------------------------------
+
+        biometricStatus:
+            biometricStatus,
+
+        biometricReference:
+            biometricReference,
+
+        biometricProvider:
+            biometricProvider,
+
+        biometricEnrolledDate:
+            biometricEnrolledDate,
       );
 
       // --------------------------------------------------------
@@ -774,7 +1170,8 @@ String generatedStudentID = "";
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             "Student registered successfully.",
@@ -790,7 +1187,8 @@ String generatedStudentID = "";
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         SnackBar(
           content: Text(
             "Failed to register student: $e",
@@ -807,11 +1205,12 @@ String generatedStudentID = "";
   }
 
   // ============================================================
-  // FIELD HELPERS
+  // TEXT FIELD
   // ============================================================
 
   Widget textField({
-    required TextEditingController controller,
+    required TextEditingController
+        controller,
     required String label,
     bool requiredField = false,
     TextInputType? keyboardType,
@@ -819,8 +1218,10 @@ String generatedStudentID = "";
   }) {
     return TextFormField(
       controller: controller,
-      keyboardType: keyboardType,
+      keyboardType:
+          keyboardType,
       maxLines: maxLines,
+
       validator: requiredField
           ? (value) {
               if (value == null ||
@@ -831,13 +1232,19 @@ String generatedStudentID = "";
               return null;
             }
           : null,
-      decoration: InputDecoration(
+
+      decoration:
+          InputDecoration(
         labelText: label,
         border:
             const OutlineInputBorder(),
       ),
     );
   }
+
+  // ============================================================
+  // SECTION TITLE
+  // ============================================================
 
   Widget sectionTitle(
     String title,
@@ -847,9 +1254,11 @@ String generatedStudentID = "";
           const EdgeInsets.only(
         bottom: 12,
       ),
+
       child: Align(
         alignment:
             Alignment.centerLeft,
+
         child: Text(
           title,
           style:
@@ -863,53 +1272,82 @@ String generatedStudentID = "";
     );
   }
 
+  // ============================================================
+  // SPACING
+  // ============================================================
+
   Widget spacing() {
     return const SizedBox(
       height: 15,
     );
   }
 
+  // ============================================================
+  // DROPDOWN
+  // ============================================================
+
   Widget dropdownField({
     required String label,
     required String value,
     required List<String> items,
-    required ValueChanged<String?>
+    required ValueChanged<
+            String?>
         onChanged,
   }) {
     return DropdownButtonFormField<
         String>(
-      initialValue: value,
+      initialValue:
+          value,
+
       decoration:
           InputDecoration(
-        labelText: label,
+        labelText:
+            label,
         border:
             const OutlineInputBorder(),
       ),
+
       items: items
           .map(
             (item) =>
-                DropdownMenuItem(
+                DropdownMenuItem<
+                    String>(
               value: item,
-              child: Text(item),
+              child:
+                  Text(item),
             ),
           )
           .toList(),
-      onChanged: onChanged,
+
+      onChanged:
+          onChanged,
     );
   }
+
+  // ============================================================
+  // DATE FIELD
+  // ============================================================
 
   Widget dateField({
     required String label,
     required String value,
-    required VoidCallback onTap,
+    required VoidCallback
+        onTap,
   }) {
     return TextFormField(
       readOnly: true,
+
+      key: ValueKey(
+        "$label-$value",
+      ),
+
       controller:
           TextEditingController(
         text: value,
       ),
+
       onTap: onTap,
+
       validator: (value) {
         if (value == null ||
             value.trim().isEmpty) {
@@ -918,9 +1356,11 @@ String generatedStudentID = "";
 
         return null;
       },
+
       decoration:
           InputDecoration(
-        labelText: label,
+        labelText:
+            label,
         border:
             const OutlineInputBorder(),
         suffixIcon:
@@ -931,14 +1371,21 @@ String generatedStudentID = "";
     );
   }
 
+  // ============================================================
+  // FILE FIELD
+  // ============================================================
+
   Widget filePickerField({
     required String label,
     required String fileName,
-    required VoidCallback onPressed,
+    required VoidCallback
+        onPressed,
   }) {
     return Column(
       crossAxisAlignment:
-          CrossAxisAlignment.start,
+          CrossAxisAlignment
+              .start,
+
       children: [
         Text(
           label,
@@ -954,11 +1401,16 @@ String generatedStudentID = "";
         ),
 
         OutlinedButton.icon(
-          onPressed: onPressed,
-          icon: const Icon(
+          onPressed:
+              onPressed,
+
+          icon:
+              const Icon(
             Icons.attach_file,
           ),
-          label: Text(
+
+          label:
+              Text(
             fileName.isEmpty
                 ? "Choose File"
                 : fileName,
@@ -969,18 +1421,525 @@ String generatedStudentID = "";
   }
 
   // ============================================================
+  // PHOTO PREVIEW
+  // ============================================================
+
+  Widget photoPreview({
+    required String title,
+    required Uint8List?
+        imageBytes,
+    required String fileName,
+    required VoidCallback
+        onChoose,
+  }) {
+    return Container(
+      width:
+          double.infinity,
+
+      padding:
+          const EdgeInsets.all(
+        15,
+      ),
+
+      decoration:
+          BoxDecoration(
+        border:
+            Border.all(
+          color:
+              Colors.blue,
+        ),
+
+        borderRadius:
+            BorderRadius.circular(
+          10,
+        ),
+      ),
+
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment
+                .start,
+
+        children: [
+          Text(
+            title,
+            style:
+                const TextStyle(
+              fontSize: 17,
+              fontWeight:
+                  FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(
+            height: 12,
+          ),
+
+          Center(
+            child:
+                Container(
+              width: 150,
+              height: 150,
+
+              decoration:
+                  BoxDecoration(
+                border:
+                    Border.all(
+                  color:
+                      Colors.grey,
+                ),
+
+                borderRadius:
+                    BorderRadius.circular(
+                  10,
+                ),
+              ),
+
+              child:
+                  imageBytes != null
+                      ? ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(
+                            10,
+                          ),
+
+                          child:
+                              Image.memory(
+                            imageBytes,
+                            width:
+                                150,
+                            height:
+                                150,
+                            fit:
+                                BoxFit.cover,
+                          ),
+                        )
+                      : const Center(
+                          child:
+                              Icon(
+                            Icons.person,
+                            size: 70,
+                            color:
+                                Colors.grey,
+                          ),
+                        ),
+            ),
+          ),
+
+          const SizedBox(
+            height: 10,
+          ),
+
+          Center(
+            child: Text(
+              fileName.isEmpty
+                  ? "No photo selected"
+                  : fileName,
+
+              textAlign:
+                  TextAlign.center,
+
+              overflow:
+                  TextOverflow.ellipsis,
+            ),
+          ),
+
+          const SizedBox(
+            height: 10,
+          ),
+
+          SizedBox(
+            width:
+                double.infinity,
+
+            child:
+                OutlinedButton.icon(
+              onPressed:
+                  onChoose,
+
+              icon:
+                  const Icon(
+                Icons.photo_camera,
+              ),
+
+              label:
+                  Text(
+                imageBytes == null
+                    ? "CHOOSE PHOTO"
+                    : "CHANGE PHOTO",
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // BIOMETRIC PANEL
+  // ============================================================
+
+  Widget biometricPanel() {
+    final bool enrolled =
+        biometricStatus ==
+            "Enrolled";
+
+    return Container(
+      width:
+          double.infinity,
+
+      padding:
+          const EdgeInsets.all(
+        15,
+      ),
+
+      decoration:
+          BoxDecoration(
+        border:
+            Border.all(
+          color: enrolled
+              ? Colors.green
+              : Colors.blue,
+        ),
+
+        borderRadius:
+            BorderRadius.circular(
+          10,
+        ),
+      ),
+
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment
+                .start,
+
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.fingerprint,
+                size: 40,
+                color: enrolled
+                    ? Colors.green
+                    : Colors.blue,
+              ),
+
+              const SizedBox(
+                width: 10,
+              ),
+
+              const Expanded(
+                child: Text(
+                  "Fingerprint / Biometric",
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(
+            height: 10,
+          ),
+
+          Text(
+            "Status: $biometricStatus",
+            style: TextStyle(
+              fontWeight:
+                  FontWeight.bold,
+              color: enrolled
+                  ? Colors.green
+                  : Colors.orange,
+            ),
+          ),
+
+          const SizedBox(
+            height: 5,
+          ),
+
+          Text(
+            enrolled
+                ? "Fingerprint enrolled and ready for verification."
+                : "No fingerprint enrolled yet.",
+
+            style:
+                const TextStyle(
+              color:
+                  Colors.grey,
+            ),
+          ),
+
+          const SizedBox(
+            height: 12,
+          ),
+
+          SizedBox(
+            width:
+                double.infinity,
+
+            child:
+                ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger
+                    .of(context)
+                    .showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      "Fingerprint scanner enrollment will be connected here.",
+                    ),
+                  ),
+                );
+              },
+
+              icon:
+                  const Icon(
+                Icons.fingerprint,
+              ),
+
+              label:
+                  Text(
+                enrolled
+                    ? "MANAGE FINGERPRINT"
+                    : "ENROLL FINGERPRINT",
+              ),
+
+              style:
+                  ElevatedButton
+                      .styleFrom(
+                backgroundColor:
+                    Colors.blue,
+                foregroundColor:
+                    Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // CHAMPIONONE ID SECTION
+  // ============================================================
+
+  Widget championOneIDSection() {
+    final showIDSection =
+        selectedAdmissionCategory ==
+                "New Student" ||
+            selectedAdmissionCategory ==
+                "Returning Student" ||
+            selectedAdmissionCategory ==
+                "Promotion / Internal Progression";
+
+    if (!showIDSection) {
+      return const SizedBox
+          .shrink();
+    }
+
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment
+              .start,
+
+      children: [
+        sectionTitle(
+          "ChampionOne Student ID",
+        ),
+
+        const Text(
+          "Does this student already have a ChampionOne Student ID?",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight:
+                FontWeight.bold,
+          ),
+        ),
+
+        const SizedBox(
+          height: 8,
+        ),
+
+        if (selectedAdmissionCategory ==
+            "New Student")
+          RadioGroup<bool>(
+            groupValue:
+                hasPreviousChampionOneID,
+
+            onChanged:
+                (value) {
+              if (value == null) {
+                return;
+              }
+
+              setState(() {
+                hasPreviousChampionOneID =
+                    value;
+
+                if (value ==
+                    false) {
+                  existingStudentIDController
+                      .clear();
+
+                  generatedStudentID =
+                      generateStudentID();
+                }
+              });
+            },
+
+            child:
+                const Column(
+              children: [
+                RadioListTile<
+                    bool>(
+                  value: true,
+
+                  title:
+                      Text(
+                    "Yes — student already has a ChampionOne ID",
+                  ),
+                ),
+
+                RadioListTile<
+                    bool>(
+                  value: false,
+
+                  title:
+                      Text(
+                    "No — generate a new ChampionOne ID",
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        if (selectedAdmissionCategory ==
+                "New Student" &&
+            hasPreviousChampionOneID ==
+                true)
+          Padding(
+            padding:
+                const EdgeInsets
+                    .only(
+              top: 10,
+            ),
+
+            child:
+                textField(
+              controller:
+                  existingStudentIDController,
+
+              label:
+                  "Previous ChampionOne Student ID",
+
+              requiredField:
+                  true,
+            ),
+          ),
+
+        if (selectedAdmissionCategory ==
+                "New Student" &&
+            hasPreviousChampionOneID ==
+                false)
+          Padding(
+            padding:
+                const EdgeInsets
+                    .only(
+              top: 10,
+            ),
+
+            child:
+                Container(
+              width:
+                  double.infinity,
+
+              padding:
+                  const EdgeInsets.all(
+                12,
+              ),
+
+              decoration:
+                  BoxDecoration(
+                border:
+                    Border.all(
+                  color:
+                      Colors.green,
+                ),
+
+                borderRadius:
+                    BorderRadius.circular(
+                  8,
+                ),
+              ),
+
+              child:
+                  Text(
+                "New ChampionOne Student ID:\n"
+                "$generatedStudentID",
+
+                style:
+                    const TextStyle(
+                  fontWeight:
+                      FontWeight.bold,
+                  color:
+                      Colors.green,
+                ),
+              ),
+            ),
+          ),
+
+        if (selectedAdmissionCategory ==
+                "Returning Student" ||
+            selectedAdmissionCategory ==
+                "Promotion / Internal Progression")
+          Padding(
+            padding:
+                const EdgeInsets
+                    .only(
+              top: 10,
+            ),
+
+            child:
+                textField(
+              controller:
+                  existingStudentIDController,
+
+              label:
+                  "Existing ChampionOne Student ID",
+
+              requiredField:
+                  true,
+            ),
+          ),
+
+        const SizedBox(
+          height: 15,
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
   // BUILD
   // ============================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
+      appBar:
+          AppBar(
+        title:
+            const Text(
           "Student Registration",
         ),
+
         backgroundColor:
             Colors.amber,
+
         foregroundColor:
             Colors.black,
       ),
@@ -991,14 +1950,15 @@ String generatedStudentID = "";
         child:
             SingleChildScrollView(
           padding:
-              const EdgeInsets.all(
+              const EdgeInsets
+                  .all(
             20,
           ),
 
           child: Column(
             children: [
               // ==================================================
-              // ADMISSION TYPE
+              // ADMISSION INFORMATION
               // ==================================================
 
               sectionTitle(
@@ -1008,10 +1968,13 @@ String generatedStudentID = "";
               dropdownField(
                 label:
                     "School Type",
+
                 value:
                     selectedSchoolType,
+
                 items:
                     schoolTypes,
+
                 onChanged:
                     (value) {
                   if (value == null) {
@@ -1030,10 +1993,13 @@ String generatedStudentID = "";
               dropdownField(
                 label:
                     "Admission Category",
+
                 value:
                     selectedAdmissionCategory,
+
                 items:
                     admissionCategories,
+
                 onChanged:
                     (value) {
                   if (value == null) {
@@ -1043,15 +2009,84 @@ String generatedStudentID = "";
                   setState(() {
                     selectedAdmissionCategory =
                         value;
+
+                    if (value !=
+                            "New Student" &&
+                        value !=
+                            "Returning Student" &&
+                        value !=
+                            "Promotion / Internal Progression") {
+                      hasPreviousChampionOneID =
+                          null;
+
+                      existingStudentIDController
+                          .clear();
+                    }
+
+                    if (value ==
+                            "New Student" &&
+                        generatedStudentID
+                            .isEmpty) {
+                      generatedStudentID =
+                          generateStudentID();
+                    }
                   });
                 },
               ),
 
               spacing(),
 
+              championOneIDSection(),
+
               // ==================================================
-              // COMMON STUDENT INFORMATION
+              // STUDENT IDENTITY
               // ==================================================
+
+              sectionTitle(
+                "Student Identity",
+              ),
+
+              Row(
+                crossAxisAlignment:
+                    CrossAxisAlignment
+                        .start,
+
+                children: [
+                  Expanded(
+                    child:
+                        photoPreview(
+                      title:
+                          "Student Photo",
+
+                      imageBytes:
+                          studentPhotoBytes,
+
+                      fileName:
+                          studentPhotoName,
+
+                      onChoose:
+                          pickPhoto,
+                    ),
+                  ),
+
+                  const SizedBox(
+                    width: 15,
+                  ),
+
+                  Expanded(
+                    child:
+                        biometricPanel(),
+                  ),
+                ],
+              ),
+
+              // ==================================================
+              // STUDENT INFORMATION
+              // ==================================================
+
+              const SizedBox(
+                height: 25,
+              ),
 
               sectionTitle(
                 "Student Information",
@@ -1060,8 +2095,10 @@ String generatedStudentID = "";
               textField(
                 controller:
                     fullNameController,
+
                 label:
                     "Full Name",
+
                 requiredField:
                     true,
               ),
@@ -1071,6 +2108,7 @@ String generatedStudentID = "";
               textField(
                 controller:
                     preferredNameController,
+
                 label:
                     "Preferred Name",
               ),
@@ -1080,8 +2118,10 @@ String generatedStudentID = "";
               dateField(
                 label:
                     "Date of Birth",
+
                 value:
                     dateOfBirth,
+
                 onTap: () =>
                     pickDate(
                   dateOfBirthField:
@@ -1094,10 +2134,13 @@ String generatedStudentID = "";
               dropdownField(
                 label:
                     "Gender",
+
                 value:
                     selectedGender,
+
                 items:
                     genders,
+
                 onChanged:
                     (value) {
                   if (value == null) {
@@ -1116,8 +2159,10 @@ String generatedStudentID = "";
               textField(
                 controller:
                     nationalityController,
+
                 label:
                     "Nationality",
+
                 requiredField:
                     true,
               ),
@@ -1127,10 +2172,13 @@ String generatedStudentID = "";
               textField(
                 controller:
                     addressController,
+
                 label:
                     "Address",
+
                 requiredField:
                     true,
+
                 maxLines:
                     2,
               ),
@@ -1140,8 +2188,10 @@ String generatedStudentID = "";
               textField(
                 controller:
                     phoneController,
+
                 label:
                     "Phone",
+
                 keyboardType:
                     TextInputType.phone,
               ),
@@ -1151,8 +2201,10 @@ String generatedStudentID = "";
               dateField(
                 label:
                     "Admission Date",
+
                 value:
                     admissionDate,
+
                 onTap: () =>
                     pickDate(
                   dateOfBirthField:
@@ -1165,10 +2217,13 @@ String generatedStudentID = "";
               dropdownField(
                 label:
                     "Student Status",
+
                 value:
                     selectedStudentStatus,
+
                 items:
                     studentStatuses,
+
                 onChanged:
                     (value) {
                   if (value == null) {
@@ -1182,19 +2237,8 @@ String generatedStudentID = "";
                 },
               ),
 
-              spacing(),
-
-              filePickerField(
-                label:
-                    "Student Photo",
-                fileName:
-                    studentPhotoName,
-                onPressed:
-                    pickPhoto,
-              ),
-
               // ==================================================
-              // SCHOOL SPECIFIC
+              // ACADEMIC INFORMATION
               // ==================================================
 
               const SizedBox(
@@ -1209,8 +2253,10 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       classGradeController,
+
                   label:
                       "Level / Class",
+
                   requiredField:
                       true,
                 ),
@@ -1220,6 +2266,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       previousSchoolController,
+
                   label:
                       "Previous Daycare / Preschool",
                 ),
@@ -1229,8 +2276,10 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       pickupAuthorizationController,
+
                   label:
                       "Authorized Persons for Pickup",
+
                   maxLines:
                       2,
                 ),
@@ -1240,23 +2289,27 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       careInstructionsController,
+
                   label:
                       "Care / Special Instructions",
+
                   maxLines:
                       3,
                 ),
               ],
 
               if (isPrimary ||
-                  isSecondary ||
-                  isPrimarySecondary) ...[
+                  isPrimarySecondary ||
+                  isSecondary) ...[
                 textField(
                   controller:
                       classGradeController,
+
                   label:
                       isSecondary
                           ? "Grade / Form"
                           : "Grade / Class",
+
                   requiredField:
                       true,
                 ),
@@ -1266,6 +2319,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       previousSchoolController,
+
                   label:
                       "Previous School",
                 ),
@@ -1275,6 +2329,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       previousGradeController,
+
                   label:
                       "Previous Grade / Class",
                 ),
@@ -1284,6 +2339,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       previousAcademicYearController,
+
                   label:
                       "Previous Academic Year",
                 ),
@@ -1294,18 +2350,8 @@ String generatedStudentID = "";
 
                 textField(
                   controller:
-                      existingStudentIDController,
-                  label:
-                      "Existing ChampionOne Student ID",
-                  requiredField:
-                      true,
-                ),
-
-                spacing(),
-
-                textField(
-                  controller:
                       previousPrimaryClassController,
+
                   label:
                       "Previous Primary Class",
                 ),
@@ -1315,6 +2361,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       facultyController,
+
                   label:
                       "Faculty / School",
                 ),
@@ -1324,6 +2371,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       departmentController,
+
                   label:
                       "Department",
                 ),
@@ -1333,8 +2381,10 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       programController,
+
                   label:
                       "Program",
+
                   requiredField:
                       true,
                 ),
@@ -1344,6 +2394,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       majorController,
+
                   label:
                       "Major",
                 ),
@@ -1353,6 +2404,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       previousSchoolController,
+
                   label:
                       "Previous Institution",
                 ),
@@ -1362,8 +2414,10 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       programController,
+
                   label:
                       "Program / Trade",
+
                   requiredField:
                       true,
                 ),
@@ -1373,6 +2427,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       trainingLevelController,
+
                   label:
                       "Training Level",
                 ),
@@ -1382,6 +2437,7 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       previousSchoolController,
+
                   label:
                       "Previous Institution",
                 ),
@@ -1391,38 +2447,38 @@ String generatedStudentID = "";
                 textField(
                   controller:
                       practicalExperienceController,
+
                   label:
                       "Practical Experience",
+
                   maxLines:
                       3,
                 ),
               ],
 
               // ==================================================
-              // DOCUMENTS
+              // ADMISSION DOCUMENTS
               // ==================================================
 
-              if (showTranscript ||
-                  showRecommendation ||
-                  isPrimary ||
-                  isPrimarySecondary) ...[
-                const SizedBox(
-                  height: 25,
-                ),
+              const SizedBox(
+                height: 25,
+              ),
 
-                sectionTitle(
-                  "Admission Documents",
-                ),
-              ],
+              sectionTitle(
+                "Admission Documents",
+              ),
 
               if (showTranscript) ...[
                 filePickerField(
                   label:
                       "Transcript / Academic Record",
+
                   fileName:
                       transcriptName,
-                  onPressed: () =>
-                      pickDocument(
+
+                  onPressed:
+                      () =>
+                          pickDocument(
                     documentType:
                         "transcript",
                   ),
@@ -1431,21 +2487,24 @@ String generatedStudentID = "";
                 spacing(),
               ],
 
-              if (showRecommendation)
+              if (showRecommendation) ...[
                 filePickerField(
                   label:
                       "Letter of Recommendation",
+
                   fileName:
                       recommendationName,
-                  onPressed: () =>
-                      pickDocument(
+
+                  onPressed:
+                      () =>
+                          pickDocument(
                     documentType:
                         "recommendation",
                   ),
                 ),
 
-              if (showRecommendation)
                 spacing(),
+              ],
 
               if (isPrimary ||
                   isPrimarySecondary ||
@@ -1456,10 +2515,13 @@ String generatedStudentID = "";
                 filePickerField(
                   label:
                       "Transfer Certificate",
+
                   fileName:
                       transferCertificateName,
-                  onPressed: () =>
-                      pickDocument(
+
+                  onPressed:
+                      () =>
+                          pickDocument(
                     documentType:
                         "transfer",
                   ),
@@ -1470,10 +2532,13 @@ String generatedStudentID = "";
               filePickerField(
                 label:
                     "Other Admission Document",
+
                 fileName:
                     otherDocumentName,
-                onPressed: () =>
-                    pickDocument(
+
+                onPressed:
+                    () =>
+                        pickDocument(
                   documentType:
                       "other",
                 ),
@@ -1494,12 +2559,15 @@ String generatedStudentID = "";
               textField(
                 controller:
                     parentGuardianNameController,
+
                 label:
                     "Parent / Guardian Name",
+
                 requiredField:
                     isEarlyChildhood ||
                     isPrimary ||
-                    isSecondary,
+                    isSecondary ||
+                    isPrimarySecondary,
               ),
 
               spacing(),
@@ -1507,6 +2575,7 @@ String generatedStudentID = "";
               textField(
                 controller:
                     parentGuardianRelationshipController,
+
                 label:
                     "Relationship",
               ),
@@ -1516,8 +2585,10 @@ String generatedStudentID = "";
               textField(
                 controller:
                     parentGuardianPhoneController,
+
                 label:
                     "Parent / Guardian Phone",
+
                 keyboardType:
                     TextInputType.phone,
               ),
@@ -1527,8 +2598,10 @@ String generatedStudentID = "";
               textField(
                 controller:
                     parentGuardianEmailController,
+
                 label:
                     "Parent / Guardian Email",
+
                 keyboardType:
                     TextInputType.emailAddress,
               ),
@@ -1538,8 +2611,10 @@ String generatedStudentID = "";
               textField(
                 controller:
                     parentGuardianAddressController,
+
                 label:
                     "Parent / Guardian Address",
+
                 maxLines:
                     2,
               ),
@@ -1549,15 +2624,43 @@ String generatedStudentID = "";
               textField(
                 controller:
                     parentGuardianOccupationController,
+
                 label:
                     "Occupation",
               ),
+
+              // ==================================================
+              // PARENT / GUARDIAN PHOTO
+              // ==================================================
+
+              const SizedBox(
+                height: 15,
+              ),
+
+              photoPreview(
+                title:
+                    "Parent / Guardian Photo",
+
+                imageBytes:
+                    parentPhotoBytes,
+
+                fileName:
+                    parentPhotoName,
+
+                onChoose:
+                    pickParentPhoto,
+              ),
+
+              // ==================================================
+              // EMERGENCY CONTACT
+              // ==================================================
 
               spacing(),
 
               textField(
                 controller:
                     emergencyContactNameController,
+
                 label:
                     "Emergency Contact Name",
               ),
@@ -1567,8 +2670,10 @@ String generatedStudentID = "";
               textField(
                 controller:
                     emergencyContactPhoneController,
+
                 label:
                     "Emergency Contact Phone",
+
                 keyboardType:
                     TextInputType.phone,
               ),
@@ -1578,24 +2683,32 @@ String generatedStudentID = "";
               ),
 
               // ==================================================
-              // REVIEW BUTTON
+              // REVIEW APPLICATION
               // ==================================================
 
               SizedBox(
                 width:
                     double.infinity,
-                height: 58,
+
+                height:
+                    58,
+
                 child:
                     ElevatedButton.icon(
                   onPressed:
                       isSaving
                           ? null
                           : reviewApplication,
-                  icon: const Icon(
+
+                  icon:
+                      const Icon(
                     Icons.preview,
                   ),
-                  label: const Text(
+
+                  label:
+                      const Text(
                     "REVIEW APPLICATION",
+
                     style:
                         TextStyle(
                       fontSize: 17,
@@ -1603,10 +2716,13 @@ String generatedStudentID = "";
                           FontWeight.bold,
                     ),
                   ),
+
                   style:
-                      ElevatedButton.styleFrom(
+                      ElevatedButton
+                          .styleFrom(
                     backgroundColor:
                         Colors.amber,
+
                     foregroundColor:
                         Colors.black,
                   ),
@@ -1642,7 +2758,8 @@ class StudentApplicationReviewScreen
     String value,
   ) {
     if (value.trim().isEmpty) {
-      return const SizedBox.shrink();
+      return const SizedBox
+          .shrink();
     }
 
     return Padding(
@@ -1650,14 +2767,20 @@ class StudentApplicationReviewScreen
           const EdgeInsets.only(
         bottom: 10,
       ),
+
       child: Row(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
+            CrossAxisAlignment
+                .start,
+
         children: [
           SizedBox(
             width: 155,
-            child: Text(
+
+            child:
+                Text(
               "$label:",
+
               style:
                   const TextStyle(
                 fontWeight:
@@ -1665,8 +2788,10 @@ class StudentApplicationReviewScreen
               ),
             ),
           ),
+
           Expanded(
-            child: Text(value),
+            child:
+                Text(value),
           ),
         ],
       ),
@@ -1682,16 +2807,24 @@ class StudentApplicationReviewScreen
           const EdgeInsets.only(
         bottom: 15,
       ),
-      child: Padding(
+
+      child:
+          Padding(
         padding:
-            const EdgeInsets.all(15),
-        child: Column(
+            const EdgeInsets.all(
+          15,
+        ),
+
+        child:
+            Column(
           crossAxisAlignment:
               CrossAxisAlignment
                   .start,
+
           children: [
             Text(
               title,
+
               style:
                   const TextStyle(
                 fontSize: 18,
@@ -1699,9 +2832,11 @@ class StudentApplicationReviewScreen
                     FontWeight.bold,
               ),
             ),
+
             const SizedBox(
               height: 12,
             ),
+
             ...children,
           ],
         ),
@@ -1710,28 +2845,42 @@ class StudentApplicationReviewScreen
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
+      appBar:
+          AppBar(
+        title:
+            const Text(
           "Review Student Application",
         ),
+
         backgroundColor:
             Colors.amber,
+
         foregroundColor:
             Colors.black,
       ),
 
-      body: SingleChildScrollView(
+      body:
+          SingleChildScrollView(
         padding:
-            const EdgeInsets.all(20),
-        child: Column(
+            const EdgeInsets.all(
+          20,
+        ),
+
+        child:
+            Column(
           children: [
             const Text(
               "Please review all information before saving.",
+
               textAlign:
                   TextAlign.center,
-              style: TextStyle(
+
+              style:
+                  TextStyle(
                 fontSize: 16,
               ),
             ),
@@ -1740,115 +2889,202 @@ class StudentApplicationReviewScreen
               height: 20,
             ),
 
+            // ==================================================
+            // ADMISSION
+            // ==================================================
+
             section(
               "Admission Information",
               [
                 reviewRow(
                   "School Type",
-                  data["schoolType"] ?? "",
+                  data["schoolType"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Admission Category",
                   data[
                           "admissionCategory"] ??
                       "",
                 ),
+
                 reviewRow(
                   "Student ID",
-                  data["studentID"] ?? "",
+                  data["studentID"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Academic Year",
-                  data["academicYear"] ?? "",
+                  data[
+                          "academicYear"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Admission Date",
-                  data["admissionDate"] ?? "",
+                  data[
+                          "admissionDate"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Status",
-                  data["studentStatus"] ?? "",
+                  data[
+                          "studentStatus"] ??
+                      "",
+                ),
+
+                reviewRow(
+                  "Biometric Status",
+                  data[
+                          "biometricStatus"] ??
+                      "",
                 ),
               ],
             ),
+
+            // ==================================================
+            // STUDENT
+            // ==================================================
 
             section(
               "Student Information",
               [
                 reviewRow(
                   "Full Name",
-                  data["fullName"] ?? "",
+                  data["fullName"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Preferred Name",
-                  data["preferredName"] ?? "",
+                  data[
+                          "preferredName"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Date of Birth",
-                  data["dateOfBirth"] ?? "",
+                  data[
+                          "dateOfBirth"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Gender",
-                  data["gender"] ?? "",
+                  data["gender"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Nationality",
-                  data["nationality"] ?? "",
+                  data[
+                          "nationality"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Address",
-                  data["address"] ?? "",
+                  data["address"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Phone",
-                  data["phone"] ?? "",
+                  data["phone"] ??
+                      "",
                 ),
               ],
             ),
+
+            // ==================================================
+            // ACADEMIC
+            // ==================================================
 
             section(
               "Academic Information",
               [
                 reviewRow(
                   "Class / Grade",
-                  data["classGrade"] ?? "",
+                  data[
+                          "classGrade"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Previous School",
-                  data["previousSchool"] ?? "",
+                  data[
+                          "previousSchool"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Previous Grade",
-                  data["previousGrade"] ?? "",
+                  data[
+                          "previousGrade"] ??
+                      "",
                 ),
+
+                reviewRow(
+                  "Previous Academic Year",
+                  data[
+                          "previousAcademicYear"] ??
+                      "",
+                ),
+
                 reviewRow(
                   "Faculty",
-                  data["faculty"] ?? "",
+                  data["faculty"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Department",
-                  data["department"] ?? "",
+                  data[
+                          "department"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Program",
-                  data["program"] ?? "",
+                  data["program"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Major",
-                  data["major"] ?? "",
+                  data["major"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Training Level",
-                  data["trainingLevel"] ?? "",
+                  data[
+                          "trainingLevel"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Practical Experience",
                   data[
                           "practicalExperience"] ??
                       "",
                 ),
+
+                reviewRow(
+                  "Previous Primary Class",
+                  data[
+                          "previousPrimaryClass"] ??
+                      "",
+                ),
               ],
             ),
+
+            // ==================================================
+            // PARENT / GUARDIAN
+            // ==================================================
 
             section(
               "Parent / Guardian",
@@ -1859,42 +3095,56 @@ class StudentApplicationReviewScreen
                           "parentGuardianName"] ??
                       "",
                 ),
+
                 reviewRow(
                   "Relationship",
                   data[
                           "parentGuardianRelationship"] ??
                       "",
                 ),
+
                 reviewRow(
                   "Phone",
                   data[
                           "parentGuardianPhone"] ??
                       "",
                 ),
+
                 reviewRow(
                   "Email",
                   data[
                           "parentGuardianEmail"] ??
                       "",
                 ),
+
                 reviewRow(
                   "Address",
                   data[
                           "parentGuardianAddress"] ??
                       "",
                 ),
+
                 reviewRow(
                   "Occupation",
                   data[
                           "parentGuardianOccupation"] ??
                       "",
                 ),
+
+                reviewRow(
+                  "Parent / Guardian Photo",
+                  data[
+                          "parentPhoto"] ??
+                      "",
+                ),
+
                 reviewRow(
                   "Emergency Contact",
                   data[
                           "emergencyContactName"] ??
                       "",
                 ),
+
                 reviewRow(
                   "Emergency Phone",
                   data[
@@ -1904,29 +3154,41 @@ class StudentApplicationReviewScreen
               ],
             ),
 
+            // ==================================================
+            // DOCUMENTS
+            // ==================================================
+
             section(
               "Documents",
               [
                 reviewRow(
                   "Student Photo",
-                  data["studentPhoto"] ?? "",
+                  data[
+                          "studentPhoto"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Transcript",
-                  data["transcript"] ?? "",
+                  data[
+                          "transcript"] ??
+                      "",
                 ),
+
                 reviewRow(
                   "Recommendation",
                   data[
                           "recommendation"] ??
                       "",
                 ),
+
                 reviewRow(
                   "Transfer Certificate",
                   data[
                           "transferCertificate"] ??
                       "",
                 ),
+
                 reviewRow(
                   "Other Document",
                   data[
@@ -1940,6 +3202,10 @@ class StudentApplicationReviewScreen
               height: 10,
             ),
 
+            // ==================================================
+            // ACTIONS
+            // ==================================================
+
             Row(
               children: [
                 Expanded(
@@ -1950,15 +3216,19 @@ class StudentApplicationReviewScreen
                         context,
                       ).pop(false);
                     },
+
                     style:
-                        OutlinedButton.styleFrom(
+                        OutlinedButton
+                            .styleFrom(
                       minimumSize:
                           const Size(
                         double.infinity,
                         55,
                       ),
                     ),
-                    child: const Text(
+
+                    child:
+                        const Text(
                       "BACK TO EDIT",
                     ),
                   ),
@@ -1970,24 +3240,33 @@ class StudentApplicationReviewScreen
 
                 Expanded(
                   child:
-                      ElevatedButton.icon(
+                      ElevatedButton
+                          .icon(
                     onPressed: () {
                       Navigator.of(
                         context,
                       ).pop(true);
                     },
-                    icon: const Icon(
+
+                    icon:
+                        const Icon(
                       Icons.check_circle,
                     ),
-                    label: const Text(
+
+                    label:
+                        const Text(
                       "CONFIRM & SAVE",
                     ),
+
                     style:
-                        ElevatedButton.styleFrom(
+                        ElevatedButton
+                            .styleFrom(
                       backgroundColor:
                           Colors.green,
+
                       foregroundColor:
                           Colors.white,
+
                       minimumSize:
                           const Size(
                         double.infinity,

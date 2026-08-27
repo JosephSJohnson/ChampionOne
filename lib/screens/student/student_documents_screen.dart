@@ -236,6 +236,18 @@ class _StudentDocumentsScreenState
             transferCertificate,
         otherDocuments:
             otherDocuments,
+
+        biometricStatus:
+    student.biometricStatus,
+
+biometricReference:
+    student.biometricReference,
+
+biometricProvider:
+    student.biometricProvider,
+
+biometricEnrolledDate:
+    student.biometricEnrolledDate,
       );
 
       await DatabaseHelper.instance.updateStudent(
@@ -634,6 +646,18 @@ class _StudentDocumentsScreenState
             transferCertificate,
         otherDocuments:
             otherDocuments,
+
+        biometricStatus:
+    student.biometricStatus,
+
+biometricReference:
+    student.biometricReference,
+
+biometricProvider:
+    student.biometricProvider,
+
+biometricEnrolledDate:
+    student.biometricEnrolledDate,
       );
 
       await DatabaseHelper.instance.updateStudent(

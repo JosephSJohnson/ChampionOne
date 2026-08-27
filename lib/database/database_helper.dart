@@ -34,7 +34,11 @@ class DatabaseHelper {
     return championDatabaseFactory.openDatabase(
       databasePath,
       options: OpenDatabaseOptions(
-        version: 4,
+        // VERSION 6
+        // Version 5 = biometric fields
+        // Version 6 = parent/guardian photo
+        version: 6,
+
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       ),
@@ -134,6 +138,8 @@ class DatabaseHelper {
         parentGuardianAddress TEXT,
         parentGuardianOccupation TEXT,
 
+        parentPhoto TEXT,
+
         emergencyContactName TEXT,
         emergencyContactPhone TEXT,
 
@@ -142,7 +148,12 @@ class DatabaseHelper {
         transcriptDocument TEXT,
         recommendationDocument TEXT,
         transferCertificate TEXT,
-        otherDocuments TEXT
+        otherDocuments TEXT,
+
+        biometricStatus TEXT,
+        biometricReference TEXT,
+        biometricProvider TEXT,
+        biometricEnrolledDate TEXT
       )
     ''');
   }
@@ -229,6 +240,50 @@ class DatabaseHelper {
           transferCertificate TEXT,
           otherDocuments TEXT
         )
+      ''');
+    }
+
+    // ----------------------------------------------------------
+    // VERSION 5
+    // Adds biometric fields to students
+    // ----------------------------------------------------------
+
+    if (oldVersion < 5) {
+      await db.execute('''
+        ALTER TABLE students
+        ADD COLUMN biometricStatus TEXT
+        DEFAULT 'Not Enrolled'
+      ''');
+
+      await db.execute('''
+        ALTER TABLE students
+        ADD COLUMN biometricReference TEXT
+        DEFAULT ''
+      ''');
+
+      await db.execute('''
+        ALTER TABLE students
+        ADD COLUMN biometricProvider TEXT
+        DEFAULT ''
+      ''');
+
+      await db.execute('''
+        ALTER TABLE students
+        ADD COLUMN biometricEnrolledDate TEXT
+        DEFAULT ''
+      ''');
+    }
+
+    // ----------------------------------------------------------
+    // VERSION 6
+    // Adds parent/guardian photo
+    // ----------------------------------------------------------
+
+    if (oldVersion < 6) {
+      await db.execute('''
+        ALTER TABLE students
+        ADD COLUMN parentPhoto TEXT
+        DEFAULT ''
       ''');
     }
   }
