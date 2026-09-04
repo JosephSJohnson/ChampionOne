@@ -49,6 +49,20 @@ class _StudentProfileScreenState
   }
 
   // ============================================================
+  // LOAD PARENT / GUARDIAN PHOTO
+  // ============================================================
+
+  Future<Uint8List?> _loadParentPhoto(
+    String imagePath,
+  ) async {
+    if (imagePath.isEmpty) {
+      return null;
+    }
+
+    return FileStorage.readFile(imagePath);
+  }
+
+  // ============================================================
   // FILE NAME
   // ============================================================
 
@@ -115,25 +129,46 @@ class _StudentProfileScreenState
     }
 
     try {
-      // Delete database record.
-      await DatabaseHelper.instance
-          .deleteStudent(
+      // ----------------------------------------------------------
+      // DELETE DATABASE RECORD
+      // ----------------------------------------------------------
+
+      await DatabaseHelper.instance.deleteStudent(
         student.studentID,
       );
 
-      // Delete from in-memory list.
+      // ----------------------------------------------------------
+      // DELETE FROM IN-MEMORY LIST
+      // ----------------------------------------------------------
+
       StudentData.deleteStudent(
         student.studentID,
       );
 
-      // Delete stored student photo.
+      // ----------------------------------------------------------
+      // DELETE STUDENT PHOTO
+      // ----------------------------------------------------------
+
       if (student.studentPhoto.isNotEmpty) {
         await FileStorage.deleteFile(
           student.studentPhoto,
         );
       }
 
-      // Delete stored documents.
+      // ----------------------------------------------------------
+      // DELETE PARENT / GUARDIAN PHOTO
+      // ----------------------------------------------------------
+
+      if (student.parentPhoto.isNotEmpty) {
+        await FileStorage.deleteFile(
+          student.parentPhoto,
+        );
+      }
+
+      // ----------------------------------------------------------
+      // DELETE STORED DOCUMENTS
+      // ----------------------------------------------------------
+
       if (student.transcriptDocument.isNotEmpty) {
         await FileStorage.deleteFile(
           student.transcriptDocument,
@@ -176,24 +211,6 @@ class _StudentProfileScreenState
         ),
       );
     }
-  }
-
-  // ============================================================
-  // EDIT PLACEHOLDER
-  // ============================================================
-  //
-  // We will connect this to EditStudentScreen next.
-  // For now it remains disabled so the profile itself
-  // stays fully functional.
-
-  void showEditComingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Student editing will be connected next.",
-        ),
-      ),
-    );
   }
 
   // ============================================================
@@ -262,6 +279,121 @@ class _StudentProfileScreenState
   }
 
   // ============================================================
+  // STUDENT PHOTO
+  // ============================================================
+
+  Widget _buildStudentPhoto() {
+    return FutureBuilder<Uint8List?>(
+      future: _loadStudentPhoto(
+        student.studentPhoto,
+      ),
+      builder: (
+        context,
+        snapshot,
+      ) {
+        final imageBytes =
+            snapshot.data;
+
+        return CircleAvatar(
+          radius: 60,
+          backgroundImage:
+              imageBytes != null
+                  ? MemoryImage(
+                      imageBytes,
+                    )
+                  : null,
+          child:
+              imageBytes == null
+                  ? Text(
+                      student.fullName.isNotEmpty
+                          ? student.fullName[0]
+                              .toUpperCase()
+                          : "?",
+                      style:
+                          const TextStyle(
+                        fontSize: 40,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    )
+                  : null,
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // PARENT / GUARDIAN PHOTO
+  // ============================================================
+
+  Widget _buildParentPhoto() {
+    return FutureBuilder<Uint8List?>(
+      future: _loadParentPhoto(
+        student.parentPhoto,
+      ),
+      builder: (
+        context,
+        snapshot,
+      ) {
+        final imageBytes =
+            snapshot.data;
+
+        return Container(
+          width: 150,
+          height: 180,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.grey.shade300,
+            ),
+            borderRadius:
+                BorderRadius.circular(12),
+            color: Colors.grey.shade50,
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius:
+                      BorderRadius.circular(10),
+                  child: imageBytes != null
+                      ? Image.memory(
+                          imageBytes,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          width: double.infinity,
+                          color: Colors.grey.shade200,
+                          child: Icon(
+                            Icons.person,
+                            size: 70,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              Text(
+                student.parentPhoto.isNotEmpty
+                    ? "Parent / Guardian Photo"
+                    : "No Photo Uploaded",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ============================================================
   // BUILD
   // ============================================================
 
@@ -280,85 +412,39 @@ class _StudentProfileScreenState
           // ======================================================
 
           IconButton(
-  icon: const Icon(
-    Icons.edit,
-  ),
-  tooltip: "Edit Student",
-  onPressed: () async {
-    final updatedStudent =
-        await Navigator.push<StudentModel>(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            EditStudentScreen(
-          student: student,
-        ),
-      ),
-    );
+            icon: const Icon(
+              Icons.edit,
+            ),
+            tooltip: "Edit Student",
+            onPressed: () async {
+              final updatedStudent =
+                  await Navigator.push<StudentModel>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      EditStudentScreen(
+                    student: student,
+                  ),
+                ),
+              );
 
-    if (!mounted) {
-      return;
-    }
+              if (!mounted) {
+                return;
+              }
 
-    if (updatedStudent == null) {
-      return;
-    }
+              if (updatedStudent == null) {
+                return;
+              }
 
-    StudentData.updateStudent(
-      updatedStudent,
-    );
+              StudentData.updateStudent(
+                updatedStudent,
+              );
 
-    setState(() {
-      student = updatedStudent;
-    });
-  },
-),
-
-const SizedBox(
-  height: 15,
-),
-
-SizedBox(
-  width: double.infinity,
-  child: ElevatedButton.icon(
-    onPressed: () async {
-      final updatedStudent =
-          await Navigator.push<StudentModel>(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              StudentDocumentsScreen(
-            student: student,
+              setState(() {
+                student = updatedStudent;
+              });
+            },
           ),
-        ),
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      if (updatedStudent != null) {
-        StudentData.updateStudent(
-          updatedStudent,
-        );
-
-        setState(() {
-          student = updatedStudent;
-        });
-      }
-    },
-    icon: const Icon(
-      Icons.folder,
-    ),
-    label: const Text(
-      "STUDENT DOCUMENTS",
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.amber,
-      foregroundColor: Colors.black,
-    ),
-  ),
-),
 
           // ======================================================
           // DELETE
@@ -383,45 +469,7 @@ SizedBox(
             // STUDENT PHOTO
             // ====================================================
 
-            FutureBuilder<Uint8List?>(
-              future: _loadStudentPhoto(
-                student.studentPhoto,
-              ),
-              builder: (
-                context,
-                snapshot,
-              ) {
-                final imageBytes =
-                    snapshot.data;
-
-                return CircleAvatar(
-                  radius: 60,
-                  backgroundImage:
-                      imageBytes != null
-                          ? MemoryImage(
-                              imageBytes,
-                            )
-                          : null,
-                  child:
-                      imageBytes == null
-                          ? Text(
-                              student.fullName
-                                      .isNotEmpty
-                                  ? student
-                                      .fullName[0]
-                                      .toUpperCase()
-                                  : "?",
-                              style:
-                                  const TextStyle(
-                                fontSize: 40,
-                                fontWeight:
-                                    FontWeight.bold,
-                              ),
-                            )
-                          : null,
-                );
-              },
-            ),
+            _buildStudentPhoto(),
 
             const SizedBox(
               height: 20,
@@ -455,14 +503,12 @@ SizedBox(
             // ====================================================
 
             const Align(
-              alignment:
-                  Alignment.centerLeft,
+              alignment: Alignment.centerLeft,
               child: Text(
                 "Admission Information",
                 style: TextStyle(
                   fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -505,14 +551,12 @@ SizedBox(
             ),
 
             const Align(
-              alignment:
-                  Alignment.centerLeft,
+              alignment: Alignment.centerLeft,
               child: Text(
                 "Personal Information",
                 style: TextStyle(
                   fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -565,14 +609,12 @@ SizedBox(
             ),
 
             const Align(
-              alignment:
-                  Alignment.centerLeft,
+              alignment: Alignment.centerLeft,
               child: Text(
                 "Academic Information",
                 style: TextStyle(
                   fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -640,20 +682,28 @@ SizedBox(
             ),
 
             const Align(
-              alignment:
-                  Alignment.centerLeft,
+              alignment: Alignment.centerLeft,
               child: Text(
                 "Parent / Guardian",
                 style: TextStyle(
                   fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
 
             const SizedBox(
               height: 10,
+            ),
+
+            // Parent photo.
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _buildParentPhoto(),
+            ),
+
+            const SizedBox(
+              height: 15,
             ),
 
             _buildInfo(
@@ -687,6 +737,75 @@ SizedBox(
             ),
 
             // ====================================================
+            // BIOMETRIC INFORMATION
+            // ====================================================
+
+            const SizedBox(
+              height: 15,
+            ),
+
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Biometric Information",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            const SizedBox(
+              height: 10,
+            ),
+
+            Card(
+              margin: const EdgeInsets.only(
+                bottom: 10,
+              ),
+              child: ListTile(
+                leading: Icon(
+                  student.biometricStatus ==
+                          "Enrolled"
+                      ? Icons.fingerprint
+                      : Icons.fingerprint_outlined,
+                  color:
+                      student.biometricStatus ==
+                              "Enrolled"
+                          ? Colors.green
+                          : Colors.grey,
+                  size: 32,
+                ),
+                title: const Text(
+                  "Biometric Status",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  student.biometricStatus.isEmpty
+                      ? "Not Enrolled"
+                      : student.biometricStatus,
+                ),
+              ),
+            ),
+
+            _buildInfo(
+              "Biometric Reference",
+              student.biometricReference,
+            ),
+
+            _buildInfo(
+              "Biometric Provider",
+              student.biometricProvider,
+            ),
+
+            _buildInfo(
+              "Enrollment Date",
+              student.biometricEnrolledDate,
+            ),
+
+            // ====================================================
             // EMERGENCY CONTACT
             // ====================================================
 
@@ -695,14 +814,12 @@ SizedBox(
             ),
 
             const Align(
-              alignment:
-                  Alignment.centerLeft,
+              alignment: Alignment.centerLeft,
               child: Text(
                 "Emergency Contact",
                 style: TextStyle(
                   fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -730,14 +847,12 @@ SizedBox(
             ),
 
             const Align(
-              alignment:
-                  Alignment.centerLeft,
+              alignment: Alignment.centerLeft,
               child: Text(
                 "Admission Documents",
                 style: TextStyle(
                   fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -775,37 +890,57 @@ SizedBox(
             ),
 
             const SizedBox(
-              height: 20,
+              height: 15,
             ),
 
             // ====================================================
-            // EDIT
+            // STUDENT DOCUMENTS
             // ====================================================
 
             SizedBox(
               width: double.infinity,
-              child:
-                  ElevatedButton.icon(
-                onPressed:
-                    showEditComingSoon,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final updatedStudent =
+                      await Navigator.push<StudentModel>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          StudentDocumentsScreen(
+                        student: student,
+                      ),
+                    ),
+                  );
+
+                  if (!mounted) {
+                    return;
+                  }
+
+                  if (updatedStudent != null) {
+                    StudentData.updateStudent(
+                      updatedStudent,
+                    );
+
+                    setState(() {
+                      student = updatedStudent;
+                    });
+                  }
+                },
                 icon: const Icon(
-                  Icons.edit,
+                  Icons.folder,
                 ),
                 label: const Text(
-                  "EDIT STUDENT",
+                  "STUDENT DOCUMENTS",
                 ),
-                style:
-                    ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.amber,
-                  foregroundColor:
-                      Colors.black,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.black,
                 ),
               ),
             ),
 
             const SizedBox(
-              height: 15,
+              height: 20,
             ),
 
             // ====================================================
@@ -814,22 +949,17 @@ SizedBox(
 
             SizedBox(
               width: double.infinity,
-              child:
-                  ElevatedButton.icon(
-                onPressed:
-                    deleteStudent,
+              child: ElevatedButton.icon(
+                onPressed: deleteStudent,
                 icon: const Icon(
                   Icons.delete,
                 ),
                 label: const Text(
                   "DELETE STUDENT",
                 ),
-                style:
-                    ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.red,
-                  foregroundColor:
-                      Colors.white,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
                 ),
               ),
             ),

@@ -34,10 +34,15 @@ class DatabaseHelper {
     return championDatabaseFactory.openDatabase(
       databasePath,
       options: OpenDatabaseOptions(
-        // VERSION 6
+        // --------------------------------------------------------
+        // VERSION 7
+        //
         // Version 5 = biometric fields
         // Version 6 = parent/guardian photo
-        version: 6,
+        // Version 7 = student documents table
+        // --------------------------------------------------------
+
+        version: 7,
 
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
@@ -156,6 +161,21 @@ class DatabaseHelper {
         biometricEnrolledDate TEXT
       )
     ''');
+
+    // ----------------------------------------------------------
+    // STUDENT DOCUMENTS
+    // ----------------------------------------------------------
+
+    await db.execute('''
+      CREATE TABLE student_documents(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        studentID TEXT,
+        documentType TEXT,
+        documentName TEXT,
+        filePath TEXT,
+        uploadDate TEXT
+      )
+    ''');
   }
 
   // ============================================================
@@ -245,7 +265,7 @@ class DatabaseHelper {
 
     // ----------------------------------------------------------
     // VERSION 5
-    // Adds biometric fields to students
+    // Adds biometric fields
     // ----------------------------------------------------------
 
     if (oldVersion < 5) {
@@ -284,6 +304,104 @@ class DatabaseHelper {
         ALTER TABLE students
         ADD COLUMN parentPhoto TEXT
         DEFAULT ''
+      ''');
+    }
+
+    // ----------------------------------------------------------
+    // VERSION 7
+    // Adds student_documents table
+    // ----------------------------------------------------------
+
+    if (oldVersion < 7) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS student_documents(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          studentID TEXT,
+          documentType TEXT,
+          documentName TEXT,
+          filePath TEXT,
+          uploadDate TEXT
+        )
+      ''');
+
+      // --------------------------------------------------------
+      // MIGRATE EXISTING STUDENT DOCUMENTS
+      // --------------------------------------------------------
+
+      await db.execute('''
+        INSERT INTO student_documents(
+          studentID,
+          documentType,
+          documentName,
+          filePath,
+          uploadDate
+        )
+        SELECT
+          studentID,
+          'Transcript / Academic Record',
+          transcriptDocument,
+          transcriptDocument,
+          admissionDate
+        FROM students
+        WHERE transcriptDocument IS NOT NULL
+          AND transcriptDocument != ''
+      ''');
+
+      await db.execute('''
+        INSERT INTO student_documents(
+          studentID,
+          documentType,
+          documentName,
+          filePath,
+          uploadDate
+        )
+        SELECT
+          studentID,
+          'Letter of Recommendation',
+          recommendationDocument,
+          recommendationDocument,
+          admissionDate
+        FROM students
+        WHERE recommendationDocument IS NOT NULL
+          AND recommendationDocument != ''
+      ''');
+
+      await db.execute('''
+        INSERT INTO student_documents(
+          studentID,
+          documentType,
+          documentName,
+          filePath,
+          uploadDate
+        )
+        SELECT
+          studentID,
+          'Transfer Certificate',
+          transferCertificate,
+          transferCertificate,
+          admissionDate
+        FROM students
+        WHERE transferCertificate IS NOT NULL
+          AND transferCertificate != ''
+      ''');
+
+      await db.execute('''
+        INSERT INTO student_documents(
+          studentID,
+          documentType,
+          documentName,
+          filePath,
+          uploadDate
+        )
+        SELECT
+          studentID,
+          'Other Document',
+          otherDocuments,
+          otherDocuments,
+          admissionDate
+        FROM students
+        WHERE otherDocuments IS NOT NULL
+          AND otherDocuments != ''
       ''');
     }
   }
@@ -415,6 +533,27 @@ class DatabaseHelper {
     );
   }
 
+  Future<Map<String, dynamic>?> getStudentByID(
+    String studentID,
+  ) async {
+    final db = await database;
+
+    final results = await db.query(
+      'students',
+      where: 'studentID = ?',
+      whereArgs: [
+        studentID,
+      ],
+      limit: 1,
+    );
+
+    if (results.isEmpty) {
+      return null;
+    }
+
+    return results.first;
+  }
+
   Future<int> updateStudent(
     Map<String, dynamic> student,
   ) async {
@@ -440,6 +579,66 @@ class DatabaseHelper {
       where: 'studentID = ?',
       whereArgs: [
         studentID,
+      ],
+    );
+  }
+
+  // ============================================================
+  // STUDENT DOCUMENTS
+  // ============================================================
+
+  Future<int> insertStudentDocument(
+    Map<String, dynamic> document,
+  ) async {
+    final db = await database;
+
+    return db.insert(
+      'student_documents',
+      document,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>>
+      getStudentDocuments(
+    String studentID,
+  ) async {
+    final db = await database;
+
+    return db.query(
+      'student_documents',
+      where: 'studentID = ?',
+      whereArgs: [
+        studentID,
+      ],
+      orderBy: 'id DESC',
+    );
+  }
+
+  Future<int> updateStudentDocument(
+    Map<String, dynamic> document,
+  ) async {
+    final db = await database;
+
+    return db.update(
+      'student_documents',
+      document,
+      where: 'id = ?',
+      whereArgs: [
+        document['id'],
+      ],
+    );
+  }
+
+  Future<int> deleteStudentDocument(
+    int id,
+  ) async {
+    final db = await database;
+
+    return db.delete(
+      'student_documents',
+      where: 'id = ?',
+      whereArgs: [
+        id,
       ],
     );
   }
