@@ -45,9 +45,10 @@ class DatabaseHelper {
         // Version 10 = system settings / installation state
         // Version 11 = permanent school record
         // Version 12 = leadership roles and stable system roles
+        // Version 13 = secure user accounts
         // --------------------------------------------------------
 
-        version: 12,
+        version: 13,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       ),
@@ -230,6 +231,43 @@ await db.execute('''
     createdAt TEXT NOT NULL,
     updatedAt TEXT NOT NULL,
     UNIQUE(schoolId, systemRole)
+  )
+''');
+
+// ----------------------------------------------------------
+// USER ACCOUNTS
+// Secure application accounts
+// ----------------------------------------------------------
+
+await db.execute('''
+  CREATE TABLE user_accounts(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    accountId TEXT UNIQUE NOT NULL,
+    schoolId INTEGER NOT NULL,
+
+    displayName TEXT NOT NULL,
+    displayTitle TEXT NOT NULL,
+    systemRole TEXT NOT NULL,
+
+    username TEXT COLLATE NOCASE NOT NULL,
+
+    passwordHash TEXT NOT NULL,
+    passwordSalt TEXT NOT NULL,
+
+    passwordAlgorithm TEXT NOT NULL DEFAULT 'Argon2id',
+    passwordMemory INTEGER NOT NULL DEFAULT 19456,
+    passwordIterations INTEGER NOT NULL DEFAULT 2,
+    passwordParallelism INTEGER NOT NULL DEFAULT 1,
+
+    email TEXT,
+    phone TEXT,
+
+    accountStatus TEXT NOT NULL DEFAULT 'Active',
+
+    createdAt TEXT NOT NULL,
+    lastLoginAt TEXT,
+
+    UNIQUE(schoolId, username)
   )
 ''');
 
@@ -630,7 +668,46 @@ if (oldVersion < 12) {
     )
   ''');
 }
+    // ----------------------------------------------------------
+    // VERSION 13
+    // Adds secure user accounts
+    // ----------------------------------------------------------
+
+    if (oldVersion < 13) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS user_accounts(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          accountId TEXT UNIQUE NOT NULL,
+          schoolId INTEGER NOT NULL,
+
+          displayName TEXT NOT NULL,
+          displayTitle TEXT NOT NULL,
+          systemRole TEXT NOT NULL,
+
+          username TEXT COLLATE NOCASE NOT NULL,
+
+          passwordHash TEXT NOT NULL,
+          passwordSalt TEXT NOT NULL,
+
+          passwordAlgorithm TEXT NOT NULL DEFAULT 'Argon2id',
+          passwordMemory INTEGER NOT NULL DEFAULT 19456,
+          passwordIterations INTEGER NOT NULL DEFAULT 2,
+          passwordParallelism INTEGER NOT NULL DEFAULT 1,
+
+          email TEXT,
+          phone TEXT,
+
+          accountStatus TEXT NOT NULL DEFAULT 'Active',
+
+          createdAt TEXT NOT NULL,
+          lastLoginAt TEXT,
+
+          UNIQUE(schoolId, username)
+        )
+      ''');
+    }
   }
+
 
   // ============================================================
   // SCHOOL MANAGEMENT
@@ -933,6 +1010,114 @@ if (oldVersion < 12) {
       where: 'id = ?',
       whereArgs: [existing['id']],
     );
+  }
+    // ============================================================
+  // INITIAL SETUP COMPLETION CHECK
+  // ============================================================
+
+  /// Verifies that the minimum records required for ChampionOne
+  /// to enter the login stage actually exist.
+  Future<bool> isInitialSetupComplete() async {
+    final db = await database;
+
+    // ----------------------------------------------------------
+    // SCHOOL
+    // ----------------------------------------------------------
+
+    final schools = await db.query(
+      'schools',
+      columns: ['id'],
+      where: 'status = ?',
+      whereArgs: ['Active'],
+      limit: 1,
+    );
+
+    if (schools.isEmpty) {
+      return false;
+    }
+
+    final schoolId = schools.first['id'];
+
+    if (schoolId == null) {
+      return false;
+    }
+
+    // ----------------------------------------------------------
+    // ACADEMIC YEAR
+    // ----------------------------------------------------------
+
+    final academicYears = await db.query(
+      'academic_years',
+      columns: ['id'],
+      limit: 1,
+    );
+
+    if (academicYears.isEmpty) {
+      return false;
+    }
+
+    // ----------------------------------------------------------
+    // LEADERSHIP ROLES
+    // ----------------------------------------------------------
+
+    final leadershipRoles = await db.query(
+      'leadership_roles',
+      columns: ['id'],
+      where: 'schoolId = ? AND isEnabled = ?',
+      whereArgs: [
+        schoolId,
+        1,
+      ],
+      limit: 1,
+    );
+
+    if (leadershipRoles.isEmpty) {
+      return false;
+    }
+
+    // ----------------------------------------------------------
+    // PROPRIETOR ACCOUNT
+    // ----------------------------------------------------------
+
+    final proprietorAccounts = await db.query(
+      'user_accounts',
+      columns: ['id'],
+      where:
+          'schoolId = ? AND systemRole = ? AND accountStatus = ?',
+      whereArgs: [
+        schoolId,
+        'PROPRIETOR',
+        'Active',
+      ],
+      limit: 1,
+    );
+
+    if (proprietorAccounts.isEmpty) {
+      return false;
+    }
+
+    // ----------------------------------------------------------
+    // ADMINISTRATOR ACCOUNT
+    // ----------------------------------------------------------
+
+    final administratorAccounts = await db.query(
+      'user_accounts',
+      columns: ['id'],
+      where:
+          'schoolId = ? AND systemRole = ? AND accountStatus = ?',
+      whereArgs: [
+        schoolId,
+        'ADMINISTRATOR',
+        'Active',
+      ],
+      limit: 1,
+    );
+
+    if (administratorAccounts.isEmpty) {
+      return false;
+    }
+
+    return true;
   }
 
   // ============================================================
@@ -1543,4 +1728,331 @@ Future<Map<String, dynamic>?>
       ],
     );
   }
+    // ============================================================
+  // USER ACCOUNTS
+  // ============================================================
+
+  /// Creates a new secure user account.
+  ///
+  /// The password must already be hashed by PasswordHasher.
+  /// Plaintext passwords must never be passed to this method.
+  Future<int> createUserAccount(
+    Map<String, dynamic> account,
+  ) async {
+    final db = await database;
+
+    final schoolId = account['schoolId'];
+
+    if (schoolId == null) {
+      throw Exception(
+        'School ID is required.',
+      );
+    }
+
+    final displayName =
+        (account['displayName'] ?? '')
+            .toString()
+            .trim();
+
+    final displayTitle =
+        (account['displayTitle'] ?? '')
+            .toString()
+            .trim();
+
+    final systemRole =
+        (account['systemRole'] ?? '')
+            .toString()
+            .trim();
+
+    final username =
+        (account['username'] ?? '')
+            .toString()
+            .trim()
+            .toLowerCase();
+
+    final passwordHash =
+        (account['passwordHash'] ?? '')
+            .toString()
+            .trim();
+
+    final passwordSalt =
+        (account['passwordSalt'] ?? '')
+            .toString()
+            .trim();
+
+    if (displayName.isEmpty) {
+      throw Exception(
+        'Account name is required.',
+      );
+    }
+
+    if (displayTitle.isEmpty) {
+      throw Exception(
+        'Display title is required.',
+      );
+    }
+
+    if (systemRole.isEmpty) {
+      throw Exception(
+        'System role is required.',
+      );
+    }
+
+    if (username.isEmpty) {
+      throw Exception(
+        'Username is required.',
+      );
+    }
+
+    if (passwordHash.isEmpty ||
+        passwordSalt.isEmpty) {
+      throw Exception(
+        'Secure password data is required.',
+      );
+    }
+
+    final existing =
+        await db.query(
+      'user_accounts',
+      columns: ['id'],
+      where:
+          'schoolId = ? AND username = ?',
+      whereArgs: [
+        schoolId,
+        username,
+      ],
+      limit: 1,
+    );
+
+    if (existing.isNotEmpty) {
+      throw Exception(
+        'Username "$username" already exists for this school.',
+      );
+    }
+
+    final now =
+        DateTime.now().toIso8601String();
+
+    final accountId =
+        (account['accountId'] ?? '')
+            .toString()
+            .trim();
+
+    final generatedAccountId =
+        accountId.isNotEmpty
+            ? accountId
+            : 'ACC-${DateTime.now().microsecondsSinceEpoch}';
+
+    return db.insert(
+      'user_accounts',
+      {
+        'accountId': generatedAccountId,
+        'schoolId': schoolId,
+        'displayName': displayName,
+        'displayTitle': displayTitle,
+        'systemRole': systemRole,
+        'username': username,
+        'passwordHash': passwordHash,
+        'passwordSalt': passwordSalt,
+        'passwordAlgorithm':
+            account['passwordAlgorithm'] ??
+                'Argon2id',
+        'passwordMemory':
+            account['passwordMemory'] ??
+                19456,
+        'passwordIterations':
+            account['passwordIterations'] ??
+                2,
+        'passwordParallelism':
+            account['passwordParallelism'] ??
+                1,
+        'email':
+            account['email'] ?? '',
+        'phone':
+            account['phone'] ?? '',
+        'accountStatus':
+            account['accountStatus'] ??
+                'Active',
+        'createdAt': now,
+        'lastLoginAt':
+            account['lastLoginAt'],
+      },
+    );
+  }
+
+  /// Finds an account using its account ID.
+  Future<Map<String, dynamic>?>
+      getUserAccountById(
+    String accountId,
+  ) async {
+    final db = await database;
+
+    final results =
+        await db.query(
+      'user_accounts',
+      where: 'accountId = ?',
+      whereArgs: [accountId],
+      limit: 1,
+    );
+
+    if (results.isEmpty) {
+      return null;
+    }
+
+    return results.first;
+  }
+
+  /// Finds an account by username within a school.
+  Future<Map<String, dynamic>?>
+      getUserAccountByUsername(
+    int schoolId,
+    String username,
+  ) async {
+    final db = await database;
+
+    final normalizedUsername =
+        username.trim().toLowerCase();
+
+    final results =
+        await db.query(
+      'user_accounts',
+      where:
+          'schoolId = ? AND username = ?',
+      whereArgs: [
+        schoolId,
+        normalizedUsername,
+      ],
+      limit: 1,
+    );
+
+    if (results.isEmpty) {
+      return null;
+    }
+
+    return results.first;
+  }
+
+  /// Returns every account belonging to a school.
+  Future<List<Map<String, dynamic>>>
+      getUserAccounts(
+    int schoolId,
+  ) async {
+    final db = await database;
+
+    return db.query(
+      'user_accounts',
+      where: 'schoolId = ?',
+      whereArgs: [schoolId],
+      orderBy: 'id DESC',
+    );
+  }
+
+  /// Updates an existing account.
+  Future<int> updateUserAccount(
+    Map<String, dynamic> account,
+  ) async {
+    final db = await database;
+
+    final id = account['id'];
+
+    if (id == null) {
+      throw Exception(
+        'Account database ID is required.',
+      );
+    }
+
+    final data =
+        Map<String, dynamic>.from(account);
+
+    data.remove('id');
+
+    if (data.containsKey('username')) {
+      data['username'] =
+          data['username']
+              .toString()
+              .trim()
+              .toLowerCase();
+    }
+
+    return db.update(
+      'user_accounts',
+      data,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Changes an account's active/disabled status.
+  Future<int> updateUserAccountStatus(
+    int id,
+    String status,
+  ) async {
+    final db = await database;
+
+    final normalizedStatus =
+        status.trim();
+
+    if (normalizedStatus.isEmpty) {
+      throw Exception(
+        'Account status is required.',
+      );
+    }
+
+    return db.update(
+      'user_accounts',
+      {
+        'accountStatus':
+            normalizedStatus,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Records the most recent successful login.
+  Future<int> updateUserAccountLastLogin(
+    int id,
+  ) async {
+    final db = await database;
+
+    return db.update(
+      'user_accounts',
+      {
+        'lastLoginAt':
+            DateTime.now()
+                .toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Checks whether a username is already used
+  /// by a school.
+  Future<bool> userAccountUsernameExists(
+    int schoolId,
+    String username,
+  ) async {
+    final account =
+        await getUserAccountByUsername(
+      schoolId,
+      username,
+    );
+
+    return account != null;
+  }
+    // ============================================================
+  // INITIAL SETUP COMPLETION
+  // ============================================================
+
+  /// Determines whether the minimum required records exist
+  /// for ChampionOne to move from initial setup to login.
+  ///
+  /// Required:
+  /// 1. A configured school
+  /// 2. At least one academic year
+  /// 3. Leadership roles for the school
+  /// 4. A PROPRIETOR account
+  /// 5. An ADMINISTRATOR account
+  
 }

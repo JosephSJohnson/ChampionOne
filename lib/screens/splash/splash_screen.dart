@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../database/database_helper.dart';
+import '../login/login_screen.dart';
 import '../welcome/welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -29,29 +30,21 @@ class _SplashScreenState
       return;
     }
 
-    bool setupCompleted = false;
+    bool setupComplete = false;
 
     try {
-      setupCompleted =
+      setupComplete =
           await DatabaseHelper.instance
-              .isSetupCompleted();
+              .isInitialSetupComplete();
     } catch (_) {
-      setupCompleted = false;
+      setupComplete = false;
     }
 
     if (!mounted) {
       return;
     }
 
-    // ----------------------------------------------------------
-    // VERSION 10
-    //
-    // For now, an unconfigured system goes to Welcome.
-    // The login screen will be connected in a later phase
-    // when authentication is implemented.
-    // ----------------------------------------------------------
-
-    if (!setupCompleted) {
+    if (!setupComplete) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -63,25 +56,19 @@ class _SplashScreenState
       return;
     }
 
-    // ----------------------------------------------------------
-    // TEMPORARY FALLBACK
-    //
-    // Authentication is not implemented yet.
-    // Once authentication is built, this branch will go to
-    // the LoginScreen instead.
-    // ----------------------------------------------------------
-
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) =>
-            const WelcomeScreen(),
+            const LoginScreen(),
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
@@ -94,22 +81,22 @@ class _SplashScreenState
               size: 90,
               color: Colors.amber,
             ),
-
-            const SizedBox(height: 20),
-
+            const SizedBox(
+              height: 20,
+            ),
             const Text(
-              "ChampionOne",
+              'ChampionOne',
               style: TextStyle(
                 fontSize: 34,
                 fontWeight:
                     FontWeight.bold,
               ),
             ),
-
-            const SizedBox(height: 10),
-
+            const SizedBox(
+              height: 10,
+            ),
             const Text(
-              "School Management System",
+              'School Management System',
             ),
           ],
         ),
